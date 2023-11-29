@@ -32,9 +32,10 @@ typedef struct MyBitmap
 
 typedef struct Item
 {
-    char *text;
+    struct Item *parent;
     struct Item *children;
     i32 childrenCount;
+    char *text;
 } Item;
 
 
@@ -43,5 +44,14 @@ typedef struct ItemInStack
     Item *ref;
     int level;
 } ItemInStack;
+
+typedef struct MyInput
+{
+    i32 downPressed;
+    i32 upPressed;
+    i32 leftPressed;
+    i32 rightPressed;
+} MyInput;
+
 
 #endif

@@ -1,6 +1,9 @@
 #include "drawing.c"
 #include "types.h"
 #include "item.c"
+#include "selection.c"
+
+#define BACKGROUND_COLOR_GREY 0x11
 
 i32 iconR = 3;
 
@@ -13,6 +16,7 @@ void InitApp()
 
     selectedItem = root.children + 2;
 }
+
 
 i32 GetVisibleChildrenCount(Item* parent)
 {
@@ -47,7 +51,7 @@ void DrawLineAt(MyBitmap *bitmap, int x, int baselineY, Item *item)
     if (item->childrenCount > 0)
     {
         i32 numberOfVisibleChildren = GetVisibleChildrenCount(item);
-        i32 linePadding = 10;
+        i32 linePadding = 20;
         DrawRect(bitmap, x - iconR / 2 - 12, cy + iconR * 2 + linePadding, 2, numberOfVisibleChildren * GetFontHeight() * 1.2 - iconR * 2 - linePadding * 2, 0xcc555555);
     }
 
@@ -99,5 +103,35 @@ void UpdateAndDrawApp(MyBitmap *bitmap)
         {
             stack[++currentItemInStack] = (ItemInStack){current.ref->children + c, current.level + 1};
         }
+    }
+}
+
+
+void HandleInput(MyInput * input)
+{
+    if(input->downPressed)
+    {
+        Item * itemBelow = GetItemBelow(selectedItem);
+        if(itemBelow)
+            selectedItem = itemBelow;
+    }
+
+    if(input->upPressed)
+    {
+        Item * itemAbove = GetItemAbove(selectedItem);
+        if(itemAbove && itemAbove->parent)
+            selectedItem = itemAbove;
+    }
+    
+    if(input->leftPressed)
+    {
+        if(selectedItem->parent->parent)
+            selectedItem = selectedItem->parent;
+    }
+
+    if(input->rightPressed)
+    {
+        if(selectedItem->childrenCount > 0)
+            selectedItem = selectedItem->children;
     }
 }

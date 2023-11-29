@@ -3,10 +3,12 @@
 void AssignChildren(Item *item, char **children, int childrenLen)
 {
     item->childrenCount = childrenLen;
-    item->children = calloc(item->childrenCount, sizeof(Item));
-    for (int i = 0; i < item->childrenCount; i++)
+    item->children = calloc(childrenLen, sizeof(Item));
+    for (int i = 0; i < childrenLen; i++)
     {
-        (item->children + i)->text = *(children + i);
+        Item *child = item->children + i;
+        child->parent = item;
+        child->text = *(children + i);
     }
 }
 
@@ -25,12 +27,12 @@ void InitRoot(Item * root){
         "Asura",
         "Cell",
         "Biosphere",
-        "Aes Dana",
-        "Side Liner",
-        "Fahrenheit Project",
-        "H.U.V.A Network",
-        "Solar Fields",
-        "Sync24",
+        // "Aes Dana",
+        // "Side Liner",
+        // "Fahrenheit Project",
+        // "H.U.V.A Network",
+        // "Solar Fields",
+        // "Sync24",
     };
 
     char *asuraChildren[] = {
@@ -57,9 +59,10 @@ void InitRoot(Item * root){
 
 
     AssignChildren(root, items, ArrayLength(items));
-    AssignChildren(root->children + 11, asuraChildren, ArrayLength(asuraChildren));
-    AssignChildren((root->children + 11)->children, lostEdemItems, ArrayLength(lostEdemItems));
-    AssignChildren(root->children + 17, solarFieldsChildren, ArrayLength(solarFieldsChildren));
-    AssignChildren(root->children + 18, syncChildren, ArrayLength(syncChildren));
+    AssignChildren(root->children + 3, asuraChildren, ArrayLength(asuraChildren));
+    AssignChildren((root->children + 3)->children, lostEdemItems, ArrayLength(lostEdemItems));
+    AssignChildren((root->children + 3)->children + 3, lostEdemItems, ArrayLength(lostEdemItems));
+    // AssignChildren(root->children + 17, solarFieldsChildren, ArrayLength(solarFieldsChildren));
+    // AssignChildren(root->children + 18, syncChildren, ArrayLength(syncChildren));
 
 }
