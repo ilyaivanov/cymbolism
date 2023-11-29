@@ -1,6 +1,13 @@
 #include <windows.h>
+#include "types.h"
+#include "win_utils.c"
+#include "drawing.c"
 
-int isRunning = 0;
+MyBitmap bitmap = {0};
+BITMAPINFO bitmapInfo = {0};
+
+i32 isRunning = 0;
+i32 isFullscreen = 0;
 
 LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -8,43 +15,27 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
     {
         isRunning = 0;
     }
+    else if (message == WM_SIZE)
+    {
+        OnResize(window, &bitmapInfo, &bitmap);
+        DrawRect(&bitmap, bitmap.width / 2 - 10, bitmap.height / 2 - 10, 20, 20, 0xffffffff);
+    }
     else if (message == WM_PAINT)
     {
         PAINTSTRUCT paint = {0};
         HDC dc = BeginPaint(window, &paint);
+        DrawBitmap(dc, &bitmapInfo, &bitmap);
         EndPaint(window, &paint);
     }
 
     return DefWindowProc(window, message, wParam, lParam);
 }
 
-HWND OpenGameWindow(HINSTANCE instance)
-{
-    WNDCLASS windowClass = {
-        .hInstance = instance,
-        .lpfnWndProc = OnEvent,
-        .lpszClassName = "MyWindow",
-        .style = CS_VREDRAW | CS_HREDRAW | CS_OWNDC,
-        .hCursor = LoadCursor(0, IDC_ARROW),
-    };
-    RegisterClassA(&windowClass);
-
-    HDC dc = GetDC(0);
-    int screenWidth = GetDeviceCaps(dc, HORZRES);
-
-    int windowWidth = 800;
-    int windowHeight = 600;
-    return CreateWindowA(windowClass.lpszClassName, "Cymbolism", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-                         /* x */ screenWidth - windowWidth - 25,
-                         /* y */ 25,
-                         /* w */ windowWidth,
-                         /* h */ windowHeight,
-                         0, 0, instance, 0);
-}
-
 int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
 {
-    HWND window = OpenGameWindow(instance);
+    PreventWindowsDPIScaling();
+
+    HWND window = OpenGameWindow(instance, OnEvent);
     isRunning = 1;
     while (isRunning)
     {
@@ -52,6 +43,11 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
 
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
         {
+            if (msg.message == WM_KEYDOWN && msg.wParam == VK_SPACE)
+            {
+                isFullscreen = isFullscreen ? 0 : 1;
+                ToggleFullscreen(window, isFullscreen);
+            }
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
