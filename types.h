@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+#define ArrayLength(array) (sizeof(array) / sizeof(array[0]))
+#define MyAssert(cond) if (!(cond)) { *(u32*)0 = 0; }
+
 typedef int8_t i8;
 typedef int16_t i16;
 typedef int32_t i32;
@@ -24,5 +27,21 @@ typedef struct MyBitmap
     i32 bytesPerPixel;
     u32 *pixels;
 } MyBitmap;
+
+
+
+typedef struct Item
+{
+    char *text;
+    struct Item *children;
+    i32 childrenCount;
+} Item;
+
+
+typedef struct ItemInStack
+{
+    Item *ref;
+    int level;
+} ItemInStack;
 
 #endif

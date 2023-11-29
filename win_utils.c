@@ -7,6 +7,16 @@
 // BITMAP
 //
 
+void InitBitmapInfo(BITMAPINFO * bitmapInfo, u32 width, u32 height)
+{
+    bitmapInfo->bmiHeader.biSize = sizeof(bitmapInfo->bmiHeader);
+    bitmapInfo->bmiHeader.biBitCount = 32;
+    bitmapInfo->bmiHeader.biWidth = width;
+    bitmapInfo->bmiHeader.biHeight = -height; // makes rows go up, instead of going down by default
+    bitmapInfo->bmiHeader.biPlanes = 1;
+    bitmapInfo->bmiHeader.biCompression = BI_RGB;
+}
+
 void OnResize(HWND window, BITMAPINFO *bitmapInfo, MyBitmap *bitmap)
 {
     RECT rect;
@@ -21,12 +31,7 @@ void OnResize(HWND window, BITMAPINFO *bitmapInfo, MyBitmap *bitmap)
     bitmap->height = rect.bottom - rect.top;
     bitmap->bytesPerPixel = 4;
 
-    bitmapInfo->bmiHeader.biSize = sizeof(bitmapInfo->bmiHeader);
-    bitmapInfo->bmiHeader.biBitCount = bitmap->bytesPerPixel * 8;
-    bitmapInfo->bmiHeader.biWidth = bitmap->width;
-    bitmapInfo->bmiHeader.biHeight = -bitmap->height; // makes rows go up, instead of going down by default
-    bitmapInfo->bmiHeader.biPlanes = 1;
-    bitmapInfo->bmiHeader.biCompression = BI_RGB;
+    InitBitmapInfo(bitmapInfo, bitmap->width, bitmap->height);
 
     i32 size = bitmap->width * bitmap->height * bitmap->bytesPerPixel;
     bitmap->pixels = VirtualAlloc(0, size, MEM_COMMIT, PAGE_READWRITE);
@@ -60,7 +65,7 @@ HWND OpenGameWindow(HINSTANCE instance, WNDPROC OnEvent)
     int screenWidth = GetDeviceCaps(dc, HORZRES);
 
     int windowWidth = 800;
-    int windowHeight = 600;
+    int windowHeight = 1200;
     return CreateWindowA(windowClass.lpszClassName, "Cymbolism", EDITOR_DEFAULT_WINDOW_STYLE | WS_VISIBLE,
                          /* x */ screenWidth - windowWidth - 25,
                          /* y */ 25,

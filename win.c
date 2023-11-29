@@ -1,7 +1,8 @@
 #include <windows.h>
 #include "types.h"
 #include "win_utils.c"
-#include "drawing.c"
+#include "gdiFont.c"
+#include "editor.c"
 
 MyBitmap bitmap = {0};
 BITMAPINFO bitmapInfo = {0};
@@ -18,7 +19,7 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
     else if (message == WM_SIZE)
     {
         OnResize(window, &bitmapInfo, &bitmap);
-        DrawRect(&bitmap, bitmap.width / 2 - 10, bitmap.height / 2 - 10, 20, 20, 0xffffffff);
+        UpdateAndDrawApp(&bitmap);
     }
     else if (message == WM_PAINT)
     {
@@ -34,6 +35,8 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
 {
     PreventWindowsDPIScaling();
+    InitFontSystem(13);
+    InitApp();
 
     HWND window = OpenGameWindow(instance, OnEvent);
     isRunning = 1;
