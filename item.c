@@ -4,6 +4,7 @@ void AssignChildren(Item *item, char **children, int childrenLen)
 {
     item->childrenCount = childrenLen;
     item->children = calloc(childrenLen, sizeof(Item));
+    item->isOpen = 1;
     for (int i = 0; i < childrenLen; i++)
     {
         Item *child = item->children + i;
@@ -57,7 +58,7 @@ void InitRoot(Item * root){
         "One 4",
     };
 
-
+    root->isOpen = 1;
     AssignChildren(root, items, ArrayLength(items));
     AssignChildren(root->children + 3, asuraChildren, ArrayLength(asuraChildren));
     AssignChildren((root->children + 3)->children, lostEdemItems, ArrayLength(lostEdemItems));

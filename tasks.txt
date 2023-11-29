@@ -1,4 +1,5 @@
 Navigation up and down [done]
-Navigation left and right
-Open and Close items
+Navigation left and right [done]
+Open and Close items [done]
 Enter/Exit edit mode
+

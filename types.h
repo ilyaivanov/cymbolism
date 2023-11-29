@@ -35,6 +35,7 @@ typedef struct Item
     struct Item *parent;
     struct Item *children;
     i32 childrenCount;
+    i32 isOpen;
     char *text;
 } Item;
 

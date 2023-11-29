@@ -14,7 +14,7 @@ i32 GetItemIndex(Item *item)
 
 Item *GetItemBelow(Item *item)
 {
-    if (item->childrenCount > 0)
+    if (item->isOpen)
     {
         return item->children;
     }
@@ -28,7 +28,7 @@ Item *GetItemBelow(Item *item)
         }
         else
         {
-            while (parent->parent && GetItemIndex(parent) == parent->parent->childrenCount - 1)
+            while (parent->parent && GetItemIndex(parent) == parent->parent->childrenCount - 1 && parent->isOpen)
                 parent = parent->parent;
             if (parent->parent)
                 return parent->parent->children + GetItemIndex(parent) + 1;
@@ -44,7 +44,7 @@ Item* GetItemAbove(Item * item){
         return parent;
     Item *prevItem = parent->children + itemIndex - 1;
     //looking for the most nested item
-    while(prevItem->childrenCount > 0)
+    while(prevItem->isOpen)
         prevItem = prevItem->children + prevItem->childrenCount - 1;
     return prevItem;
 

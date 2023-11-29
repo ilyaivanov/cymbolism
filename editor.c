@@ -31,9 +31,12 @@ i32 GetVisibleChildrenCount(Item* parent)
         Item *item = items[currentItem--];
         res++;
 
-        for (int c = 0; c < item->childrenCount; c++)
+        if(item->isOpen)
         {
-            items[++currentItem] = item->children + c;
+            for (int c = 0; c < item->childrenCount; c++)
+            {
+                items[++currentItem] = item->children + c;
+            }
         }
     }
 
@@ -43,16 +46,21 @@ i32 GetVisibleChildrenCount(Item* parent)
 void DrawLineAt(MyBitmap *bitmap, int x, int baselineY, Item *item)
 {
     int bottom = baselineY + GetDescent();
-    int cy = bottom - GetFontHeight() / 2 - iconR + 2;
+    int middleY = bottom - GetFontHeight() / 2;
+    int cy = middleY - iconR + 2;
 
     DrawRect(bitmap, x - iconR - 12, cy, iconR * 2, iconR * 2, 0xcccccccc);
 
 
-    if (item->childrenCount > 0)
+    if (item->isOpen)
     {
         i32 numberOfVisibleChildren = GetVisibleChildrenCount(item);
         i32 linePadding = 20;
         DrawRect(bitmap, x - iconR / 2 - 12, cy + iconR * 2 + linePadding, 2, numberOfVisibleChildren * GetFontHeight() * 1.2 - iconR * 2 - linePadding * 2, 0xcc555555);
+    } else if (item->childrenCount > 0)
+    {
+        DrawRect(bitmap, x - 2 - 24, middleY, 4, 4, 0xcccccccc);
+
     }
 
     char * text = item->text;
@@ -98,40 +106,46 @@ void UpdateAndDrawApp(MyBitmap *bitmap)
             y += GetFontHeight() * 1.2;
         }
 
-
-        for (int c = current.ref->childrenCount - 1; c >= 0; c--)
+        if(current.ref->isOpen)
         {
-            stack[++currentItemInStack] = (ItemInStack){current.ref->children + c, current.level + 1};
+            for (int c = current.ref->childrenCount - 1; c >= 0; c--)
+            {
+                stack[++currentItemInStack] = (ItemInStack){current.ref->children + c, current.level + 1};
+            }
         }
     }
 }
 
 
-void HandleInput(MyInput * input)
+void HandleInput(MyInput* input)
 {
     if(input->downPressed)
     {
-        Item * itemBelow = GetItemBelow(selectedItem);
+        Item* itemBelow = GetItemBelow(selectedItem);
         if(itemBelow)
             selectedItem = itemBelow;
     }
 
     if(input->upPressed)
     {
-        Item * itemAbove = GetItemAbove(selectedItem);
+        Item* itemAbove = GetItemAbove(selectedItem);
         if(itemAbove && itemAbove->parent)
             selectedItem = itemAbove;
     }
     
     if(input->leftPressed)
     {
-        if(selectedItem->parent->parent)
+        if(selectedItem->isOpen)
+            selectedItem->isOpen = 0;
+        else if(selectedItem->parent->parent)
             selectedItem = selectedItem->parent;
     }
 
     if(input->rightPressed)
     {
-        if(selectedItem->childrenCount > 0)
+        if(!selectedItem->isOpen && selectedItem->childrenCount > 0)
+            selectedItem->isOpen = 1;
+        else if(selectedItem->childrenCount > 0) 
             selectedItem = selectedItem->children;
     }
 }
