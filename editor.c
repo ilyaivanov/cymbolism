@@ -5,16 +5,13 @@
 
 #define BACKGROUND_COLOR_GREY 0x11
 
-i32 iconR = 3;
+#define iconR 3
 
-Item root;
-Item *selectedItem;
-
-void InitApp()
+void InitApp(AppState *state)
 {
-    InitRoot(&root);
+    InitRoot(&state->root);
 
-    selectedItem = root.children + 2;
+    state->selectedItem = state->root.children + 2;
 }
 
 
@@ -80,7 +77,7 @@ void DrawLineAt(MyBitmap *bitmap, int x, int baselineY, Item *item)
 int padding = 50;
 int STEP = 40;
 
-void UpdateAndDrawApp(MyBitmap *bitmap)
+void UpdateAndDrawApp(MyBitmap *bitmap, AppState *state)
 {
     int x = padding;
     int y = padding + GetAscent();
@@ -89,63 +86,64 @@ void UpdateAndDrawApp(MyBitmap *bitmap)
     int currentItemInStack = -1;
 
     int currentItemIndex = -2;
-    stack[++currentItemInStack] = (ItemInStack){&root, -1};
+    stack[++currentItemInStack] = (ItemInStack){&state->root, -1};
 
     while(currentItemInStack >= 0)
     {
         ItemInStack current = stack[currentItemInStack--];
+        Item *item = current.ref;
 
-        if(current.ref == selectedItem)
+        if(item == state->selectedItem)
         {
             DrawRect(bitmap, 0, y - GetAscent(), bitmap->width, GetFontHeight() + 5, 0x454545);
         }
 
-        if(current.ref->text) // Skip root items without a text
+        if(item->text) // Skip root items without a text
         {
-            DrawLineAt(bitmap, x + STEP * current.level, y, current.ref);
+            DrawLineAt(bitmap, x + STEP * current.level, y, item);
             y += GetFontHeight() * 1.2;
         }
 
-        if(current.ref->isOpen)
+        if(item->isOpen)
         {
-            for (int c = current.ref->childrenCount - 1; c >= 0; c--)
+            for (int c = item->childrenCount - 1; c >= 0; c--)
             {
-                stack[++currentItemInStack] = (ItemInStack){current.ref->children + c, current.level + 1};
+                stack[++currentItemInStack] = (ItemInStack){item->children + c, current.level + 1};
             }
         }
     }
 }
 
 
-void HandleInput(MyInput* input)
+void HandleInput(MyInput* input, AppState *state)
 {
     if(input->downPressed)
     {
-        Item* itemBelow = GetItemBelow(selectedItem);
+        Item* itemBelow = GetItemBelow(state->selectedItem);
         if(itemBelow)
-            selectedItem = itemBelow;
+            state->selectedItem = itemBelow;
     }
 
     if(input->upPressed)
     {
-        Item* itemAbove = GetItemAbove(selectedItem);
+        Item* itemAbove = GetItemAbove(state->selectedItem);
         if(itemAbove && itemAbove->parent)
-            selectedItem = itemAbove;
+            state->selectedItem = itemAbove;
     }
     
     if(input->leftPressed)
     {
-        if(selectedItem->isOpen)
-            selectedItem->isOpen = 0;
-        else if(selectedItem->parent->parent)
-            selectedItem = selectedItem->parent;
+        if(state->selectedItem->isOpen)
+            state->selectedItem->isOpen = 0;
+        else if(state->selectedItem->parent->parent)
+            state->selectedItem = state->selectedItem->parent;
     }
 
     if(input->rightPressed)
     {
-        if(!selectedItem->isOpen && selectedItem->childrenCount > 0)
-            selectedItem->isOpen = 1;
-        else if(selectedItem->childrenCount > 0) 
-            selectedItem = selectedItem->children;
+        if(!state->selectedItem->isOpen && state->selectedItem->childrenCount > 0)
+            state->selectedItem->isOpen = 1;
+        else if(state->selectedItem->childrenCount > 0) 
+            state->selectedItem = state->selectedItem->children;
     }
 }

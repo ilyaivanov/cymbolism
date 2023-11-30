@@ -7,6 +7,8 @@
 MyBitmap bitmap = {0};
 MyInput input = {0};
 BITMAPINFO bitmapInfo = {0};
+AppState state = {0};
+
 
 i32 isRunning = 0;
 i32 isFullscreen = 0;
@@ -20,7 +22,7 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
     else if (message == WM_SIZE)
     {
         OnResize(window, &bitmapInfo, &bitmap);
-        UpdateAndDrawApp(&bitmap);
+        UpdateAndDrawApp(&bitmap, &state);
     }
     else if (message == WM_PAINT)
     {
@@ -38,7 +40,7 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
     PreventWindowsDPIScaling();
     timeBeginPeriod(1);
     InitFontSystem(13);
-    InitApp();
+    InitApp(&state);
 
     HWND window = OpenGameWindow(instance, OnEvent);
     HDC dc = GetDC(window);
@@ -80,8 +82,8 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
         // reset pixels
         memset(bitmap.pixels, BACKGROUND_COLOR_GREY, bitmap.height * bitmap.width * bitmap.bytesPerPixel);
 
-        HandleInput(&input);
-        UpdateAndDrawApp(&bitmap);
+        HandleInput(&input, &state);
+        UpdateAndDrawApp(&bitmap, &state);
         DrawBitmap(dc, &bitmapInfo, &bitmap);
     }
 }

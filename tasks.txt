@@ -1,5 +1,11 @@
 Navigation up and down [done]
 Navigation left and right [done]
 Open and Close items [done]
+Cleanup - move all state into win file
 Enter/Exit edit mode
+
+
+
+TODO:
+Create a design system
 

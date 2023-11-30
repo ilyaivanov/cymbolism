@@ -54,5 +54,10 @@ typedef struct MyInput
     i32 rightPressed;
 } MyInput;
 
+typedef struct AppState {
+    Item root;
+    Item *selectedItem;
+} AppState;
+
 
 #endif

@@ -37,7 +37,8 @@ Item *GetItemBelow(Item *item)
     return 0;
 }
 
-Item* GetItemAbove(Item * item){
+Item* GetItemAbove(Item * item)
+{
     Item *parent = item->parent;
     i32 itemIndex = GetItemIndex(item);
     if(itemIndex == 0)
