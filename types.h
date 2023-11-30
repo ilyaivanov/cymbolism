@@ -54,10 +54,31 @@ typedef struct MyInput
     i32 rightPressed;
 } MyInput;
 
+
+
+typedef struct FontData {
+    MyBitmap textures[256];
+
+    // Need to use ABC structure for this 
+    // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getcharabcwidthsa
+    u8 widths[256];
+
+    TEXTMETRIC textMetric;
+
+    int kerningPairCount;
+    KERNINGPAIR *pairs;
+} FontData;
+
+typedef struct Fonts
+{
+    FontData regular;
+} Fonts;
+
 typedef struct AppState {
     Item root;
     Item *selectedItem;
+    Fonts fonts;
+    MyBitmap canvas;
 } AppState;
-
 
 #endif

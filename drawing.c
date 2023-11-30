@@ -1,6 +1,7 @@
 #include <math.h>
 #include "types.h"
 
+
 // need alpha blending
 void DrawRect(MyBitmap *bitmap, i32 x, i32 y, i32 width, i32 height, i32 color)
 {
@@ -43,6 +44,11 @@ void DrawRect(MyBitmap *bitmap, i32 x, i32 y, i32 width, i32 height, i32 color)
 }
 
 
+inline void DrawSquareAtCenter(MyBitmap *bitmap, i32 x, i32 y, i32 size, i32 color)
+{
+    i32 halfSize = size / 2;
+    DrawRect(bitmap, x - halfSize, y - halfSize, size, size, color);
+}
 
 inline void DrawTextureTopLeft(MyBitmap *destination, MyBitmap *texture, float textX, float textY, u32 color)
 {

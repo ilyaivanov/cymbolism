@@ -1,10 +1,10 @@
 #include <windows.h>
 #include "types.h"
 #include "win_utils.c"
+#include "drawing.c"
 #include "gdiFont.c"
 #include "editor.c"
 
-MyBitmap bitmap = {0};
 MyInput input = {0};
 BITMAPINFO bitmapInfo = {0};
 AppState state = {0};
@@ -21,14 +21,14 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
     }
     else if (message == WM_SIZE)
     {
-        OnResize(window, &bitmapInfo, &bitmap);
-        UpdateAndDrawApp(&bitmap, &state);
+        OnResize(window, &bitmapInfo, &state.canvas);
+        UpdateAndDrawApp(&state);
     }
     else if (message == WM_PAINT)
     {
         PAINTSTRUCT paint = {0};
         HDC dc = BeginPaint(window, &paint);
-        DrawBitmap(dc, &bitmapInfo, &bitmap);
+        DrawBitmap(dc, &bitmapInfo, &state.canvas);
         EndPaint(window, &paint);
     }
 
@@ -39,7 +39,6 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
 {
     PreventWindowsDPIScaling();
     timeBeginPeriod(1);
-    InitFontSystem(13);
     InitApp(&state);
 
     HWND window = OpenGameWindow(instance, OnEvent);
@@ -80,10 +79,10 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
         }
 
         // reset pixels
-        memset(bitmap.pixels, BACKGROUND_COLOR_GREY, bitmap.height * bitmap.width * bitmap.bytesPerPixel);
+        memset(state.canvas.pixels, BACKGROUND_COLOR_GREY, state.canvas.height * state.canvas.width * state.canvas.bytesPerPixel);
 
         HandleInput(&input, &state);
-        UpdateAndDrawApp(&bitmap, &state);
-        DrawBitmap(dc, &bitmapInfo, &bitmap);
+        UpdateAndDrawApp(&state);
+        DrawBitmap(dc, &bitmapInfo, &state.canvas);
     }
 }

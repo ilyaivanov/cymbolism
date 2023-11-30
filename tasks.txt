@@ -1,7 +1,11 @@
 Navigation up and down [done]
 Navigation left and right [done]
 Open and Close items [done]
-Cleanup - move all state into win file
+Cleanup
+    move all state into win file
+    move fontData outside of gdiFont
+    draw items relative to the center (not baseline)
+
 Enter/Exit edit mode
 
 

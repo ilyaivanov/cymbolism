@@ -2,36 +2,35 @@
 #include "windows.h"
 
 // char *fontPath = "c:/windows/fonts/cour.ttf";
-char *fontPath = "c:/windows/fonts/segoeui.ttf";
+// char *fontPath = "c:/windows/fonts/segoeui.ttf";
 // char *fontPath = "c:/windows/fonts/arial.ttf";
 // char *fontPath = "c:/windows/fonts/lucon.ttf";
 // char *fontPath = "c:/windows/fonts/consola.ttf";
 
 // char *fontName = "Courier New";
-char *fontName = "Segoe UI";
+// char *fontName = "Segoe UI";
 // char *fontName = "Consolas";
 // char *fontName = "Arial";
 
 //monospaced
 // char *fontName = "Lucida Console";
 
-MyBitmap textures[256];
+// MyBitmap textures[256];
 
 // Need to use ABC structure for this 
 // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getcharabcwidthsa
-u8 widths[256];
+// u8 widths[256];
 
-TEXTMETRIC textMetric;
+// TEXTMETRIC textMetric;
 
-int kerningPairCount;
-KERNINGPAIR *pairs;
+// int kerningPairCount;
+// KERNINGPAIR *pairs;
 
-void InitFontSystem(int fontSize)
+void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
 {
     HDC deviceContext = CreateCompatibleDC(0);
  
-    AddFontResourceExA(fontPath, FR_PRIVATE, 0);
-
+    // AddFontResourceExA(fontPath, FR_PRIVATE, 0);
 
     int h = -MulDiv(fontSize, GetDeviceCaps(deviceContext, LOGPIXELSY), 96); // WTF is 96 or 72
     HFONT font = CreateFontA(h, 0, 0, 0,
@@ -57,9 +56,9 @@ void InitFontSystem(int fontSize)
     SelectObject(deviceContext, font);
 
     
-    kerningPairCount = GetKerningPairsA(deviceContext, 0, 0);
-    pairs = malloc(sizeof(KERNINGPAIR) * kerningPairCount);
-    GetKerningPairsA(deviceContext, kerningPairCount, pairs);
+    fontData->kerningPairCount = GetKerningPairsA(deviceContext, 0, 0);
+    fontData->pairs = malloc(sizeof(KERNINGPAIR) * fontData->kerningPairCount);
+    GetKerningPairsA(deviceContext, fontData->kerningPairCount, fontData->pairs);
 
     SetBkColor(deviceContext, RGB(0, 0, 0));
     SetTextColor(deviceContext, RGB(255, 255, 255));
@@ -70,10 +69,10 @@ void InitFontSystem(int fontSize)
         int len = 1;
         GetTextExtentPoint32A(deviceContext, &ch, len, &size);
 
-        widths[ch - 32] = size.cx;
+        fontData->widths[ch - 32] = size.cx;
         TextOutA(deviceContext, 0, 0, &ch, len);
 
-        MyBitmap* texture = &textures[ch - 32];
+        MyBitmap* texture = &fontData->textures[ch - 32];
         texture->width = size.cx;
         texture->height = size.cy;
         texture->bytesPerPixel = 4;
@@ -98,43 +97,60 @@ void InitFontSystem(int fontSize)
     }
 
 
-    GetTextMetrics(deviceContext, &textMetric);
+    GetTextMetrics(deviceContext, &fontData->textMetric);
     DeleteDC(deviceContext);
 }
 
-MyBitmap *GetGlyphBitmap(char codepoint)
+MyBitmap *GetGlyphBitmap(FontData *font, char codepoint)
 {
     MyAssert(codepoint >= 32 && codepoint <= 126);
-    return &textures[codepoint - 32];
+    return &font->textures[codepoint - 32];
 }
 
-u8 GetGlyphWidth(char codepoint)
+u8 GetGlyphWidth(FontData *font,char codepoint)
 {
     MyAssert(codepoint >= 32 && codepoint <= 126);
-    return widths[codepoint - 32];
+    return font->widths[codepoint - 32];
 }
 
-inline int GetFontHeight()
+inline int GetFontHeight(FontData *font)
 {
-    return textMetric.tmHeight;
+    return font->textMetric.tmHeight;
 }
 
-inline int GetDescent()
+inline int GetDescent(FontData *font)
 {
-    return textMetric.tmDescent;
+    return font->textMetric.tmDescent;
 }
 
-inline int GetAscent()
+inline int GetAscent(FontData *font)
 {
-    return textMetric.tmAscent;
+    return font->textMetric.tmAscent;
 }
 
-
-int GetKerningValue(char left, char right)
+inline void DrawTextLeftCentered(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char *text, i32 color)
 {
-    KERNINGPAIR * pair = pairs;
+    int len = strlen(text);
+    i32 topLine = y - font->textMetric.tmHeight / 2;
+    
+    for (int i = 0; i < len; i += 1)
+    {
+        char codepoint = *text;
+        MyBitmap *glyphBitmap = GetGlyphBitmap(font, codepoint);
+        DrawTextureTopLeft(bitmap, glyphBitmap, x, topLine, color);
+
+        char nextCodepoint = *(text + 1);
+        x += glyphBitmap->width + GetKerningValue(font, codepoint, nextCodepoint);
+        text++;
+    }
+
+}
+
+int GetKerningValue(FontData *font, char left, char right)
+{
+    KERNINGPAIR * pair = font->pairs;
     // TODO: optimize this into a hash or a nested arrays
-    for (int i = 0; i < kerningPairCount; i += 1)
+    for (int i = 0; i < font->kerningPairCount; i += 1)
     {
         if (pair->wFirst == left && pair->wSecond == right)
             return pair->iKernAmount;

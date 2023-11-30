@@ -1,17 +1,34 @@
-#include "drawing.c"
 #include "types.h"
 #include "item.c"
 #include "selection.c"
 
 #define BACKGROUND_COLOR_GREY 0x11
 
-#define iconR 3
+#define ICON_SIZE 6 
+#define SMALL_ICON_SIZE 4 
+
+#define padding 50
+#define STEP 40
+#define TEXT_TO_ICON_DISTANCE 10
+#define SMALL_ICON_TO_ICON_DISTANCE 8
+
+#define LINE_TO_ICON_DISTANCE 10
+#define FONT_SIZE 13
+
+// char *fontName = "Courier New";
+char *fontName = "Segoe UI";
+// char *fontName = "Consolas";
+// char *fontName = "Arial";
+
+//monospaced
+// char *fontName = "Lucida Console";
 
 void InitApp(AppState *state)
 {
+    InitFontSystem(&state->fonts.regular, FONT_SIZE, fontName);
     InitRoot(&state->root);
 
-    state->selectedItem = state->root.children + 2;
+    state->selectedItem = state->root.children;
 }
 
 
@@ -40,52 +57,37 @@ i32 GetVisibleChildrenCount(Item* parent)
     return res;
 }
 
-void DrawLineAt(MyBitmap *bitmap, int x, int baselineY, Item *item)
+void DrawItem(AppState *state, int x, int y, Item *item)
 {
-    int bottom = baselineY + GetDescent();
-    int middleY = bottom - GetFontHeight() / 2;
-    int cy = middleY - iconR + 2;
+    DrawSquareAtCenter(&state->canvas, x, y, ICON_SIZE, 0xcccccccc);
 
-    DrawRect(bitmap, x - iconR - 12, cy, iconR * 2, iconR * 2, 0xcccccccc);
-
+    DrawTextLeftCentered(&state->canvas, &state->fonts.regular, x + ICON_SIZE / 2 + TEXT_TO_ICON_DISTANCE, y - 2, item->text, 0xffffffff);
 
     if (item->isOpen)
     {
         i32 numberOfVisibleChildren = GetVisibleChildrenCount(item);
-        i32 linePadding = 20;
-        DrawRect(bitmap, x - iconR / 2 - 12, cy + iconR * 2 + linePadding, 2, numberOfVisibleChildren * GetFontHeight() * 1.2 - iconR * 2 - linePadding * 2, 0xcc555555);
-    } else if (item->childrenCount > 0)
-    {
-        DrawRect(bitmap, x - 2 - 24, middleY, 4, 4, 0xcccccccc);
-
+        DrawRect(&state->canvas,
+                 x - 1,
+                 y + ICON_SIZE / 2 + LINE_TO_ICON_DISTANCE,
+                 2,
+                 numberOfVisibleChildren * GetFontHeight(&state->fonts.regular) * 1.2 - ICON_SIZE * 2 - LINE_TO_ICON_DISTANCE * 2, 0xcc454545);
     }
-
-    char * text = item->text;
-    int len = strlen(text);
-    for (int i = 0; i < len; i += 1)
+    else if (item->childrenCount > 0)
     {
-        char codepoint = *text;
-        MyBitmap *glyphBitmap = GetGlyphBitmap(codepoint);
-        DrawTextureTopLeft(bitmap, glyphBitmap, x, baselineY - glyphBitmap->height + GetDescent(), 0xffffffff);
-
-        char nextCodepoint = *(text + 1);
-        x += glyphBitmap->width + GetKerningValue(codepoint, nextCodepoint);
-        text++;
+        DrawSquareAtCenter(&state->canvas, x - ICON_SIZE / 2 - SMALL_ICON_TO_ICON_DISTANCE - SMALL_ICON_SIZE / 2, y, SMALL_ICON_SIZE, 0xcccccccc);
     }
 }
 
-int padding = 50;
-int STEP = 40;
 
-void UpdateAndDrawApp(MyBitmap *bitmap, AppState *state)
+
+void UpdateAndDrawApp(AppState *state)
 {
     int x = padding;
-    int y = padding + GetAscent();
+    int y = padding;
 
     ItemInStack stack[512] = {0};
     int currentItemInStack = -1;
 
-    int currentItemIndex = -2;
     stack[++currentItemInStack] = (ItemInStack){&state->root, -1};
 
     while(currentItemInStack >= 0)
@@ -93,15 +95,16 @@ void UpdateAndDrawApp(MyBitmap *bitmap, AppState *state)
         ItemInStack current = stack[currentItemInStack--];
         Item *item = current.ref;
 
+        int height = state->fonts.regular.textMetric.tmHeight;
         if(item == state->selectedItem)
         {
-            DrawRect(bitmap, 0, y - GetAscent(), bitmap->width, GetFontHeight() + 5, 0x454545);
+            DrawRect(&state->canvas, 0, y - height / 2, state->canvas.width, height, 0x454545);
         }
 
         if(item->text) // Skip root items without a text
         {
-            DrawLineAt(bitmap, x + STEP * current.level, y, item);
-            y += GetFontHeight() * 1.2;
+            DrawItem(state, x + STEP * current.level, y, item);
+            y += height * 1.2;
         }
 
         if(item->isOpen)
