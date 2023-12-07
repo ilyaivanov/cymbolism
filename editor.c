@@ -14,18 +14,15 @@
 
 #define LINE_TO_ICON_DISTANCE 10
 #define FONT_SIZE 13
+#define FONT_FAMILY "Segoe UI"
 
-// char *fontName = "Courier New";
-char *fontName = "Segoe UI";
-// char *fontName = "Consolas";
-// char *fontName = "Arial";
-
-//monospaced
-// char *fontName = "Lucida Console";
+//Colors
+#define SELECTION_BAR_EDIT_MODE 0x99800080
+#define SELECTION_BAR_NORMAL_MODE 0x99454545
 
 void InitApp(AppState *state)
 {
-    InitFontSystem(&state->fonts.regular, FONT_SIZE, fontName);
+    InitFontSystem(&state->fonts.regular, FONT_SIZE, FONT_FAMILY);
     InitRoot(&state->root);
 
     state->selectedItem = state->root.children;
@@ -61,7 +58,7 @@ void DrawItem(AppState *state, int x, int y, Item *item)
 {
     DrawSquareAtCenter(&state->canvas, x, y, ICON_SIZE, 0xcccccccc);
 
-    DrawTextLeftCentered(&state->canvas, &state->fonts.regular, x + ICON_SIZE / 2 + TEXT_TO_ICON_DISTANCE, y - 2, item->text, 0xffffffff);
+    DrawTextLeftCentered(&state->canvas, &state->fonts.regular, x + ICON_SIZE / 2 + TEXT_TO_ICON_DISTANCE, y - 2, item->textBuffer.text, 0xffffffff);
 
     if (item->isOpen)
     {
@@ -98,10 +95,19 @@ void UpdateAndDrawApp(AppState *state)
         int height = state->fonts.regular.textMetric.tmHeight;
         if(item == state->selectedItem)
         {
-            DrawRect(&state->canvas, 0, y - height / 2, state->canvas.width, height, 0x454545);
+            i32 selectionColor = state->editMode == EditMode_Edit ? SELECTION_BAR_EDIT_MODE : SELECTION_BAR_NORMAL_MODE;
+            DrawRect(&state->canvas, 0, y - height / 2, state->canvas.width, height, selectionColor);
+
+            if(state->editMode == EditMode_Edit)
+            {
+                i32 selectionWidth = GetTextWidth(&state->fonts.regular, item->textBuffer.text, state->cursorPosition) - 1;
+                i32 cursorX = x + STEP * current.level + selectionWidth + ICON_SIZE / 2 + TEXT_TO_ICON_DISTANCE;
+                i32 cursorY = y - height / 2;
+                DrawRect(&state->canvas, cursorX ,cursorY, 2, height, 0xffffffff);
+            }
         }
 
-        if(item->text) // Skip root items without a text
+        if(item->parent) // Skip root items without a parent
         {
             DrawItem(state, x + STEP * current.level, y, item);
             y += height * 1.2;
@@ -115,38 +121,66 @@ void UpdateAndDrawApp(AppState *state)
             }
         }
     }
+
+    char * modeLabel = state->editMode == EditMode_Edit ? "Edit" : "Normal";
+    DrawTextLeftBottom(&state->canvas, &state->fonts.regular, 10, state->canvas.height - 10, modeLabel, 0xffaaaaaa);
 }
 
 
 void HandleInput(MyInput* input, AppState *state)
 {
-    if(input->downPressed)
+
+    if (state->editMode == EditMode_Normal)
     {
-        Item* itemBelow = GetItemBelow(state->selectedItem);
-        if(itemBelow)
-            state->selectedItem = itemBelow;
+        if (input->keysPressed['J'])
+        {
+            Item *itemBelow = GetItemBelow(state->selectedItem);
+            if (itemBelow)
+                state->selectedItem = itemBelow;
+        }
+
+        if (input->keysPressed['K'])
+        {
+            Item *itemAbove = GetItemAbove(state->selectedItem);
+            if (itemAbove && itemAbove->parent)
+                state->selectedItem = itemAbove;
+        }
+
+        if (input->keysPressed['H'])
+        {
+            if (state->selectedItem->isOpen)
+                state->selectedItem->isOpen = 0;
+            else if (state->selectedItem->parent->parent)
+                state->selectedItem = state->selectedItem->parent;
+        }
+
+        if (input->keysPressed['L'])
+        {
+            if (!state->selectedItem->isOpen && state->selectedItem->childrenCount > 0)
+                state->selectedItem->isOpen = 1;
+            else if (state->selectedItem->childrenCount > 0)
+                state->selectedItem = state->selectedItem->children;
+        }
+        if (input->keysPressed['I'])
+            {state->editMode = EditMode_Edit;
+            state->cursorPosition = 0;}
+    } else
+    {
+        for (int i = 'A'; i <= 'Z'; i++)
+        {
+            if (input->keysPressed[i])
+            {
+                i8 ch = input->isPressed[VK_SHIFT] ? i : i - ('A' - 'a');
+                InsertCharAt(state->selectedItem, state->cursorPosition, ch);
+                state->cursorPosition += 1;
+            }
+        }
+        if(input->keysPressed[VK_SPACE]){
+            InsertCharAt(state->selectedItem, state->cursorPosition, ' ');
+            state->cursorPosition += 1;
+        }
     }
 
-    if(input->upPressed)
-    {
-        Item* itemAbove = GetItemAbove(state->selectedItem);
-        if(itemAbove && itemAbove->parent)
-            state->selectedItem = itemAbove;
-    }
-    
-    if(input->leftPressed)
-    {
-        if(state->selectedItem->isOpen)
-            state->selectedItem->isOpen = 0;
-        else if(state->selectedItem->parent->parent)
-            state->selectedItem = state->selectedItem->parent;
-    }
-
-    if(input->rightPressed)
-    {
-        if(!state->selectedItem->isOpen && state->selectedItem->childrenCount > 0)
-            state->selectedItem->isOpen = 1;
-        else if(state->selectedItem->childrenCount > 0) 
-            state->selectedItem = state->selectedItem->children;
-    }
+    if(input->keysPressed[VK_ESCAPE] || input->keysPressed[VK_RETURN])
+        state->editMode = EditMode_Normal;
 }

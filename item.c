@@ -9,8 +9,37 @@ void AssignChildren(Item *item, char **children, int childrenLen)
     {
         Item *child = item->children + i;
         child->parent = item;
-        child->text = *(children + i);
+
+
+        char *text = *(children + i);
+        i32 textLen = strlen(text) + 1;
+        child->textBuffer.length = textLen;
+        child->textBuffer.capacity = textLen * 2;
+
+        child->textBuffer.text = malloc(child->textBuffer.capacity);
+        CopyMemory(child->textBuffer.text, text, textLen + 1);
     }
+}
+
+inline void MoveBytesForward(char *ptr, int length) {
+    for (int i = length - 1; i > 0; i--) {
+        ptr[i] = ptr[i - 1];
+    }
+}
+
+void InsertCharAt(Item* item, i32 at, i32 ch){
+    item->textBuffer.length += 1;
+    if(item->textBuffer.length >= item->textBuffer.capacity)
+    {
+        char *currentStr = item->textBuffer.text;
+        item->textBuffer.capacity *= 2;
+        item->textBuffer.text = malloc(item->textBuffer.capacity);
+        CopyMemory(item->textBuffer.text, currentStr, item->textBuffer.length);
+        free(currentStr);
+    }
+
+    MoveBytesForward(item->textBuffer.text + at, item->textBuffer.length - at);
+    *(item->textBuffer.text + at) = ch;
 }
 
 void InitRoot(Item * root){

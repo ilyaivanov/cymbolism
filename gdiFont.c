@@ -1,31 +1,6 @@
 #include "types.h"
 #include "windows.h"
 
-// char *fontPath = "c:/windows/fonts/cour.ttf";
-// char *fontPath = "c:/windows/fonts/segoeui.ttf";
-// char *fontPath = "c:/windows/fonts/arial.ttf";
-// char *fontPath = "c:/windows/fonts/lucon.ttf";
-// char *fontPath = "c:/windows/fonts/consola.ttf";
-
-// char *fontName = "Courier New";
-// char *fontName = "Segoe UI";
-// char *fontName = "Consolas";
-// char *fontName = "Arial";
-
-//monospaced
-// char *fontName = "Lucida Console";
-
-// MyBitmap textures[256];
-
-// Need to use ABC structure for this 
-// https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getcharabcwidthsa
-// u8 widths[256];
-
-// TEXTMETRIC textMetric;
-
-// int kerningPairCount;
-// KERNINGPAIR *pairs;
-
 void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
 {
     HDC deviceContext = CreateCompatibleDC(0);
@@ -128,6 +103,16 @@ inline int GetAscent(FontData *font)
     return font->textMetric.tmAscent;
 }
 
+inline i32 GetTextWidth(FontData *font, char *text, i32 len){
+    i32 res = 0;
+    for(int i = 0; i < len; i++)
+    {
+        res += GetGlyphBitmap(font, *text)->width + GetKerningValue(font, *text, *(text + 1));
+        text++;
+    }
+    return res;
+}
+
 inline void DrawTextLeftCentered(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char *text, i32 color)
 {
     int len = strlen(text);
@@ -144,6 +129,10 @@ inline void DrawTextLeftCentered(MyBitmap *bitmap, FontData *font, i32 x, i32 y,
         text++;
     }
 
+}
+
+inline void DrawTextLeftBottom(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char *text, i32 color){
+    DrawTextLeftCentered(bitmap, font, x, y - font->textMetric.tmHeight / 2, text, color);
 }
 
 int GetKerningValue(FontData *font, char left, char right)

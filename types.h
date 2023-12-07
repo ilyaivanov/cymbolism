@@ -19,7 +19,6 @@ typedef uint64_t u64;
 typedef float f32;
 typedef double f64;
 
-
 typedef struct MyBitmap
 {
     i32 width;
@@ -28,7 +27,12 @@ typedef struct MyBitmap
     u32 *pixels;
 } MyBitmap;
 
-
+typedef struct StringBuffer
+{
+    char *text;
+    i32 capacity;
+    i32 length;
+} StringBuffer;
 
 typedef struct Item
 {
@@ -36,9 +40,8 @@ typedef struct Item
     struct Item *children;
     i32 childrenCount;
     i32 isOpen;
-    char *text;
+    StringBuffer textBuffer;
 } Item;
-
 
 typedef struct ItemInStack
 {
@@ -48,13 +51,9 @@ typedef struct ItemInStack
 
 typedef struct MyInput
 {
-    i32 downPressed;
-    i32 upPressed;
-    i32 leftPressed;
-    i32 rightPressed;
+    i32 keysPressed[256];
+    i32 isPressed[256];
 } MyInput;
-
-
 
 typedef struct FontData {
     MyBitmap textures[256];
@@ -74,11 +73,18 @@ typedef struct Fonts
     FontData regular;
 } Fonts;
 
+typedef enum EditMode {
+    EditMode_Normal,
+    EditMode_Edit,
+} EditMode;
+
 typedef struct AppState {
     Item root;
     Item *selectedItem;
     Fonts fonts;
     MyBitmap canvas;
+    EditMode editMode;
+    i32 cursorPosition;
 } AppState;
 
 #endif

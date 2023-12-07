@@ -47,7 +47,8 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
     isRunning = 1;
     while (isRunning)
     {
-        memset(&input, 0, sizeof(input));
+
+        memset(&input.keysPressed, 0, sizeof(input.keysPressed));
 
         //TODO: add proper FPS support. Be very carefull to collect input and react on the same frame when input hapenned
         Sleep(14);
@@ -55,24 +56,35 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
         MSG msg;
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
         {
+            if (msg.message == WM_KEYDOWN){
+                input.isPressed[msg.wParam] = 1;
+            }
+            if (msg.message == WM_KEYUP)
+            {
+                input.isPressed[msg.wParam] = 0;
+            }
+
             if (msg.message == WM_KEYDOWN)
             {
-                if (msg.wParam == VK_SPACE)
+                int scanCode = MapVirtualKey(msg.wParam, MAPVK_VK_TO_CHAR);
+
+                // Get the character value based on the current input locale
+                HKL keyboardLayout = GetKeyboardLayout(0);
+                WCHAR character;
+                 BYTE keyboardState[256];
+                 GetKeyboardState(keyboardState);
+                int result = ToAsciiEx(msg.wParam, scanCode, keyboardState, &character, 0, keyboardLayout);
+
+                if (msg.wParam == VK_SPACE && state.editMode == EditMode_Normal)
                 {
                     isFullscreen = isFullscreen ? 0 : 1;
                     ToggleFullscreen(window, isFullscreen);
                 }
-                else if (msg.wParam == VK_DOWN || msg.wParam == 'J')
-                    input.downPressed = 1;
-             
-                else if (msg.wParam == VK_UP || msg.wParam == 'K')
-                    input.upPressed = 1;
-
-                else if (msg.wParam == VK_LEFT || msg.wParam == 'H')
-                    input.leftPressed = 1;
-
-                else if (msg.wParam == VK_RIGHT || msg.wParam == 'L')
-                    input.rightPressed = 1;
+                
+                if(msg.wParam < 256)
+                {
+                    input.keysPressed[msg.wParam] = 1;
+                }
             }
             TranslateMessage(&msg);
             DispatchMessage(&msg);
