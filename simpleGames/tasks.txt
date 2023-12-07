@@ -1,0 +1,14 @@
+Simple games to test something (at least my focus)
+
+Spinning circles
+  ✔ Draw a circle with anti-aliased outline
+  ✔ Draw outline of a circle
+  ✔ Rotate circle with a proper FPS and angular speed
+  ✔ Change rotation speed with W and S
+  ☐ Add another enemy circle rotating
+  ☐ Check collission
+  ☐ Add flag 
+  ☐ Alpha blending
+
+
+𐄂 ☐ ✓✔ ✗✘
