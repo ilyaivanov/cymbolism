@@ -1,186 +1,212 @@
+#include <stdio.h>
 #include "types.h"
-#include "item.c"
-#include "selection.c"
+#include "text.c"
 
 #define BACKGROUND_COLOR_GREY 0x11
+#define FONT_SIZE 14
+#define FONT_FAMILY "Consolas"
 
-#define ICON_SIZE 6 
-#define SMALL_ICON_SIZE 4 
+StringBuffer textBuffer = {0};
+i32 newLines[256] = {0};
+i32 newLinesCount = 0;
 
-#define padding 50
-#define STEP 40
-#define TEXT_TO_ICON_DISTANCE 10
-#define SMALL_ICON_TO_ICON_DISTANCE 8
-
-#define LINE_TO_ICON_DISTANCE 10
-#define FONT_SIZE 13
-#define FONT_FAMILY "Segoe UI"
-
-//Colors
-#define SELECTION_BAR_EDIT_MODE 0x99800080
-#define SELECTION_BAR_NORMAL_MODE 0x99454545
-
-void InitApp(AppState *state)
-{
-    InitFontSystem(&state->fonts.regular, FONT_SIZE, FONT_FAMILY);
-    InitRoot(&state->root);
-
-    state->selectedItem = state->root.children;
-}
+char *filePath = "C:\\projects\\cymbolism\\backup.txt";
 
 
-i32 GetVisibleChildrenCount(Item* parent)
+#define VK_BACKSPACE 8
+
+i32 GetCurrentLineIndex(i32 pos)
 {
     i32 res = 0;
-    Item *items [128] = {0};
-    int currentItem = -1;
-    
-    items[++currentItem] = parent;
-
-    while(currentItem >= 0)
-    {
-        Item *item = items[currentItem--];
+    while (newLines[res] < pos)
         res++;
-
-        if(item->isOpen)
-        {
-            for (int c = 0; c < item->childrenCount; c++)
-            {
-                items[++currentItem] = item->children + c;
-            }
-        }
-    }
 
     return res;
 }
 
-void DrawItem(AppState *state, int x, int y, Item *item)
+void GetLineInfo(i32 *start, i32 *end, i32 index){
+    if(end)
+        *end = newLines[index];
+
+    if(start)
+        *start = index == 0 ? 0 : newLines[index - 1] + 1;
+}
+
+void UpdateNewLinePosition()
 {
-    DrawSquareAtCenter(&state->canvas, x, y, ICON_SIZE, 0xcccccccc);
-
-    DrawTextLeftCentered(&state->canvas, &state->fonts.regular, x + ICON_SIZE / 2 + TEXT_TO_ICON_DISTANCE, y - 2, item->textBuffer.text, 0xffffffff);
-
-    if (item->isOpen)
+    newLinesCount = 0;
+    for(int i = 0; i < textBuffer.length; i++)
     {
-        i32 numberOfVisibleChildren = GetVisibleChildrenCount(item);
-        DrawRect(&state->canvas,
-                 x - 1,
-                 y + ICON_SIZE / 2 + LINE_TO_ICON_DISTANCE,
-                 2,
-                 numberOfVisibleChildren * GetFontHeight(&state->fonts.regular) * 1.2 - ICON_SIZE * 2 - LINE_TO_ICON_DISTANCE * 2, 0xcc454545);
+        if(*(textBuffer.text + i) == '\n')
+            newLines[newLinesCount++] = i;
     }
-    else if (item->childrenCount > 0)
-    {
-        DrawSquareAtCenter(&state->canvas, x - ICON_SIZE / 2 - SMALL_ICON_TO_ICON_DISTANCE - SMALL_ICON_SIZE / 2, y, SMALL_ICON_SIZE, 0xcccccccc);
-    }
+
+    newLines[newLinesCount] = textBuffer.length - 1;
+}
+
+void InsertCharUnderCursor(AppState *state, char ch)
+{
+    InsertCharAt(&textBuffer, state->cursorPos, ch);
+    state->cursorPos += 1;
+    UpdateNewLinePosition();
+}
+
+void InitApp(AppState *state)
+{
+    InitFontSystem(&state->fonts.regular, FONT_SIZE, FONT_FAMILY);
+    FileContent file = ReadMyFileImp(filePath);
+    InitBuffer(&textBuffer, file.content, file.size);
+
+    state->isFileSaved = 1;
+    UpdateNewLinePosition();
 }
 
 
-
-void UpdateAndDrawApp(AppState *state)
+void RemoveCharLeftFromCursor(AppState *state)
 {
-    int x = padding;
-    int y = padding;
-
-    ItemInStack stack[512] = {0};
-    int currentItemInStack = -1;
-
-    stack[++currentItemInStack] = (ItemInStack){&state->root, -1};
-
-    while(currentItemInStack >= 0)
+    if(state->cursorPos > 0)
     {
-        ItemInStack current = stack[currentItemInStack--];
-        Item *item = current.ref;
+        RemoveCharAt(&textBuffer, state->cursorPos - 1);
+        state->cursorPos--;
 
-        int height = state->fonts.regular.textMetric.tmHeight;
-        if(item == state->selectedItem)
-        {
-            i32 selectionColor = state->editMode == EditMode_Edit ? SELECTION_BAR_EDIT_MODE : SELECTION_BAR_NORMAL_MODE;
-            DrawRect(&state->canvas, 0, y - height / 2, state->canvas.width, height, selectionColor);
-
-            if(state->editMode == EditMode_Edit)
-            {
-                i32 selectionWidth = GetTextWidth(&state->fonts.regular, item->textBuffer.text, state->cursorPosition) - 1;
-                i32 cursorX = x + STEP * current.level + selectionWidth + ICON_SIZE / 2 + TEXT_TO_ICON_DISTANCE;
-                i32 cursorY = y - height / 2;
-                DrawRect(&state->canvas, cursorX ,cursorY, 2, height, 0xffffffff);
-            }
-        }
-
-        if(item->parent) // Skip root items without a parent
-        {
-            DrawItem(state, x + STEP * current.level, y, item);
-            y += height * 1.2;
-        }
-
-        if(item->isOpen)
-        {
-            for (int c = item->childrenCount - 1; c >= 0; c--)
-            {
-                stack[++currentItemInStack] = (ItemInStack){item->children + c, current.level + 1};
-            }
-        }
+        UpdateNewLinePosition();            
     }
-
-    char * modeLabel = state->editMode == EditMode_Edit ? "Edit" : "Normal";
-    DrawTextLeftBottom(&state->canvas, &state->fonts.regular, 10, state->canvas.height - 10, modeLabel, 0xffaaaaaa);
 }
 
-
-void HandleInput(MyInput* input, AppState *state)
+void UpdateAndDrawApp(AppState *state, MyInput *input)
 {
-
-    if (state->editMode == EditMode_Normal)
+    if (input->keysPressed['I'] && state->editMode == EditorMode_Normal)
     {
+        state->editMode = EditorMode_Insert;
+    }
+    else if (input->keysPressed[VK_ESCAPE] && state->editMode == EditorMode_Insert)
+    {
+        state->editMode = EditorMode_Normal;
+    } 
+    else if (state->editMode == EditorMode_Insert)
+    {
+        if(input->charEventsThisFrameCount > 0)
+            state->isFileSaved = 0;
+
+        for (int i = 0; i < input->charEventsThisFrameCount; i++)
+        {
+            i32 charEvent = input->charEventsThisFrame[i];
+            if (charEvent == '\r')
+                InsertCharUnderCursor(state, '\n');
+            else if (charEvent == VK_BACKSPACE)
+                RemoveCharLeftFromCursor(state);
+            else
+                InsertCharUnderCursor(state, charEvent);
+        }
+    }
+    else if (state->editMode == EditorMode_Normal)
+    {
+        if (input->keysPressed['L'])
+        {
+            if(state->cursorPos < textBuffer.length - 2)
+                state->cursorPos++;
+        }
+
+        if (input->keysPressed['H'] && state->cursorPos > 0)
+        {
+            state->cursorPos--;
+        }
+
         if (input->keysPressed['J'])
         {
-            Item *itemBelow = GetItemBelow(state->selectedItem);
-            if (itemBelow)
-                state->selectedItem = itemBelow;
+            i32 currentLine = GetCurrentLineIndex(state->cursorPos);
+            if(currentLine < newLinesCount - 1)
+            {
+                i32 currentLineStart = 0;
+                GetLineInfo(&currentLineStart, 0, currentLine);
+
+                i32 nextLineStart = 0;
+                i32 nextLineEnd = 0;
+                GetLineInfo(&nextLineStart, &nextLineEnd, currentLine + 1);
+
+                i32 diff = state->cursorPos - currentLineStart;
+                if(nextLineEnd - nextLineStart < diff)
+                    state->cursorPos = nextLineEnd;
+                else 
+                    state->cursorPos = nextLineStart + diff;
+            }
         }
 
         if (input->keysPressed['K'])
         {
-            Item *itemAbove = GetItemAbove(state->selectedItem);
-            if (itemAbove && itemAbove->parent)
-                state->selectedItem = itemAbove;
-        }
-
-        if (input->keysPressed['H'])
-        {
-            if (state->selectedItem->isOpen)
-                state->selectedItem->isOpen = 0;
-            else if (state->selectedItem->parent->parent)
-                state->selectedItem = state->selectedItem->parent;
-        }
-
-        if (input->keysPressed['L'])
-        {
-            if (!state->selectedItem->isOpen && state->selectedItem->childrenCount > 0)
-                state->selectedItem->isOpen = 1;
-            else if (state->selectedItem->childrenCount > 0)
-                state->selectedItem = state->selectedItem->children;
-        }
-        if (input->keysPressed['I'])
-            {state->editMode = EditMode_Edit;
-            state->cursorPosition = 0;}
-    } else
-    {
-        for (int i = 'A'; i <= 'Z'; i++)
-        {
-            if (input->keysPressed[i])
+            i32 currentLine = GetCurrentLineIndex(state->cursorPos);
+            if(currentLine > 0)
             {
-                i8 ch = input->isPressed[VK_SHIFT] ? i : i - ('A' - 'a');
-                InsertCharAt(state->selectedItem, state->cursorPosition, ch);
-                state->cursorPosition += 1;
+                i32 currentLineStart = 0;
+                GetLineInfo(&currentLineStart, 0, currentLine);
+
+                i32 prevLineStart = 0;
+                i32 prevLineEnd = 0;
+                GetLineInfo(&prevLineStart, &prevLineEnd, currentLine - 1);
+
+                i32 diff = state->cursorPos - currentLineStart;
+                if(prevLineEnd - prevLineStart < diff)
+                    state->cursorPos = prevLineEnd;
+                else 
+                    state->cursorPos = prevLineStart + diff;
             }
         }
-        if(input->keysPressed[VK_SPACE]){
-            InsertCharAt(state->selectedItem, state->cursorPosition, ' ');
-            state->cursorPosition += 1;
+
+        if(input->keysPressed['S'] && input->isPressed[VK_CONTROL])
+        {
+            WriteMyFile(filePath, textBuffer.text, textBuffer.length);
+            state->isFileSaved = 1;
         }
+
+        
     }
 
-    if(input->keysPressed[VK_ESCAPE] || input->keysPressed[VK_RETURN])
-        state->editMode = EditMode_Normal;
+
+
+
+
+
+    
+
+    FontData * font = &state->fonts.regular;
+
+    i32 textX = 20;
+    i32 textY = 20;
+
+    i32 lineNumber = GetCurrentLineIndex(state->cursorPos);
+    i32 prevLineEnd = lineNumber == 0 ? 0 : newLines[lineNumber - 1] + 1;
+    i32 charPositionInLine = state->cursorPos -  prevLineEnd;
+
+    //Cursor Monospaced position
+    i32 symbolWidth = GetGlyphWidth(font, 'i');
+    i32 cursorX = textX + symbolWidth * charPositionInLine;
+    i32 cursorY = textY + lineNumber * font->textMetric.tmHeight;
+    u32 color = state->editMode == EditorMode_Normal ? 0x0059D1 : 0xaa22aa;
+    DrawRect(&state->canvas, cursorX, cursorY, symbolWidth, font->textMetric.tmHeight, color);
+
+    for (int i = 0; i <= newLinesCount; i++)
+    {
+        i32 prevLine = i == 0 ? 0 : newLines[i - 1] + 1;
+        i32 line = newLines[i];
+
+        DrawTextLeftTop(&state->canvas, font, textX, textY, textBuffer.text + prevLine, line - prevLine, 0xeeeeee);
+        
+        textY += font->textMetric.tmHeight;
+    }
+
+
+    // Drawing status bar at the bottom
+    i32 labelsC = 0x888888;
+    i32 padding = 10;
+    char *label = state->editMode == EditorMode_Normal ? "Normal" : "Insert";
+    DrawTextLeftBottom(&state->canvas, font, padding, state->canvas.height - padding, label, strlen(label), labelsC);
+    
+    
+    
+    // Drawing status bar at the bottom
+    char *savedLabel = state->isFileSaved ? "Saved" : "Modified";
+    i32 savedLabelX = state->canvas.width / 2 - strlen(savedLabel) / 2 * symbolWidth;
+    i32 savedLabelY = state->canvas.height - padding;
+    DrawTextLeftBottom(&state->canvas, font, savedLabelX, savedLabelY, savedLabel, strlen(savedLabel), labelsC);
 }
+

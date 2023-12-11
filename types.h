@@ -19,6 +19,14 @@ typedef uint64_t u64;
 typedef float f32;
 typedef double f64;
 
+
+typedef struct FileContent
+{
+    char *content;
+    i32 size;
+} FileContent;
+
+
 typedef struct MyBitmap
 {
     i32 width;
@@ -52,6 +60,8 @@ typedef struct ItemInStack
 typedef struct MyInput
 {
     i32 keysPressed[256];
+    i32 charEventsThisFrame[32];
+    i32 charEventsThisFrameCount;
     i32 isPressed[256];
 } MyInput;
 
@@ -73,18 +83,21 @@ typedef struct Fonts
     FontData regular;
 } Fonts;
 
-typedef enum EditMode {
-    EditMode_Normal,
-    EditMode_Edit,
-} EditMode;
+typedef enum EditorMode
+{
+    EditorMode_Normal,
+    EditorMode_Insert,
+} EditorMode;
 
 typedef struct AppState {
     Item root;
     Item *selectedItem;
     Fonts fonts;
     MyBitmap canvas;
-    EditMode editMode;
-    i32 cursorPosition;
+    EditorMode editMode;
+
+    i32 cursorPos;
+    i32 isFileSaved;
 } AppState;
 
 #endif

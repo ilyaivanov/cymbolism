@@ -22,7 +22,7 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
     else if (message == WM_SIZE)
     {
         OnResize(window, &bitmapInfo, &state.canvas);
-        UpdateAndDrawApp(&state);
+        UpdateAndDrawApp(&state, &input);
     }
     else if (message == WM_PAINT)
     {
@@ -49,6 +49,7 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
     {
 
         memset(&input.keysPressed, 0, sizeof(input.keysPressed));
+        input.charEventsThisFrameCount = 0;
 
         //TODO: add proper FPS support. Be very carefull to collect input and react on the same frame when input hapenned
         Sleep(14);
@@ -63,24 +64,18 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
             {
                 input.isPressed[msg.wParam] = 0;
             }
-
+            if (msg.message == WM_CHAR)
+            {
+                input.charEventsThisFrame[input.charEventsThisFrameCount++] = msg.wParam;
+            }
             if (msg.message == WM_KEYDOWN)
             {
-                int scanCode = MapVirtualKey(msg.wParam, MAPVK_VK_TO_CHAR);
-
-                // Get the character value based on the current input locale
-                HKL keyboardLayout = GetKeyboardLayout(0);
-                WCHAR character;
-                 BYTE keyboardState[256];
-                 GetKeyboardState(keyboardState);
-                int result = ToAsciiEx(msg.wParam, scanCode, keyboardState, &character, 0, keyboardLayout);
-
-                if (msg.wParam == VK_SPACE && state.editMode == EditMode_Normal)
-                {
-                    isFullscreen = isFullscreen ? 0 : 1;
-                    ToggleFullscreen(window, isFullscreen);
-                }
                 
+                // if (msg.wParam == VK_SPACE && state.editMode == EditMode_Normal)
+                // {
+                //     isFullscreen = isFullscreen ? 0 : 1;
+                //     ToggleFullscreen(window, isFullscreen);
+                // }
                 if(msg.wParam < 256)
                 {
                     input.keysPressed[msg.wParam] = 1;
@@ -93,8 +88,8 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
         // reset pixels
         memset(state.canvas.pixels, BACKGROUND_COLOR_GREY, state.canvas.height * state.canvas.width * state.canvas.bytesPerPixel);
 
-        HandleInput(&input, &state);
-        UpdateAndDrawApp(&state);
+        // HandleInput(&state);
+        UpdateAndDrawApp(&state, &input);
         DrawBitmap(dc, &bitmapInfo, &state.canvas);
     }
 }

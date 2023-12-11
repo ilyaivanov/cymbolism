@@ -1,7 +1,43 @@
 #include <windows.h>
 #include "types.h"
+#include <dwmapi.h>
 
 #define EDITOR_DEFAULT_WINDOW_STYLE (WS_OVERLAPPEDWINDOW)
+
+//
+// File API
+//
+
+FileContent ReadMyFileImp(char* path)
+{
+    HANDLE file = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+
+    LARGE_INTEGER size;
+    GetFileSizeEx(file, &size);
+
+    u32 fileSize = (u32)size.QuadPart;
+
+    void *buffer = VirtualAlloc(0, fileSize, MEM_COMMIT, PAGE_READWRITE);
+
+    DWORD bytesRead;
+    ReadFile(file, buffer, fileSize, &bytesRead, 0);
+    CloseHandle(file);
+
+    return (FileContent){.content = buffer, .size = bytesRead};
+}
+
+
+void WriteMyFile(char *path, char* content, int size)
+{
+    HANDLE file = CreateFileA(path, GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS, 0, 0);
+
+    DWORD bytesWritten;
+    int res = WriteFile(file, content, size, &bytesWritten, 0);
+    CloseHandle(file);
+
+    MyAssert(bytesWritten == size);
+}
+
 
 //
 // BITMAP
@@ -64,14 +100,20 @@ HWND OpenGameWindow(HINSTANCE instance, WNDPROC OnEvent)
     HDC dc = GetDC(0);
     int screenWidth = GetDeviceCaps(dc, HORZRES);
 
-    int windowWidth = 800;
+    int windowWidth = 1000;
     int windowHeight = 1200;
-    return CreateWindowA(windowClass.lpszClassName, "Cymbolism", EDITOR_DEFAULT_WINDOW_STYLE | WS_VISIBLE,
-                         /* x */ screenWidth / 2 - windowWidth / 2,
-                         /* y */ 25,
+    HWND window = CreateWindowA(windowClass.lpszClassName, "Cymbolism", EDITOR_DEFAULT_WINDOW_STYLE | WS_VISIBLE,
+                         /* x */ screenWidth - windowWidth - 10,
+                         /* y */ 10,
                          /* w */ windowWidth,
                          /* h */ windowHeight,
                          0, 0, instance, 0);
+
+    BOOL USE_DARK_MODE = TRUE;
+    BOOL SET_IMMERSIVE_DARK_MODE_SUCCESS = SUCCEEDED(DwmSetWindowAttribute(
+        window, DWMWA_USE_IMMERSIVE_DARK_MODE, &USE_DARK_MODE, sizeof(USE_DARK_MODE)));
+
+    return window;
 }
 
 // taken from https://devblogs.microsoft.com/oldnewthing/20100412-00/?p=14353
