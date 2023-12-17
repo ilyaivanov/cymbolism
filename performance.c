@@ -9,6 +9,11 @@ typedef enum PerfMetric
     FontKerningTablesInitialization,
     FontTexturesInitialization,
 
+    FrameTotal,
+    FramePrintText,
+    FramePrintTextFindKerning,
+    FramePrintTextDrawTexture,
+
     NumberOfPerfMetrics
 } PerfMetric;
 
@@ -21,12 +26,12 @@ typedef struct PerformanceMetrics
 
 PerformanceMetrics metrics = {0};
 
-void Start(PerfMetric metric)
+inline void Start(PerfMetric metric)
 {
     metrics.runningMetrics[metric] = __rdtsc();
 }
 
-void Stop(PerfMetric metric)
+inline void Stop(PerfMetric metric)
 {
     metrics.perf[metric] += __rdtsc() - metrics.runningMetrics[metric];
     metrics.count[metric] += 1;
@@ -37,7 +42,7 @@ void Stop(PerfMetric metric)
 void PrintRegularMetric(char* buff, char *message, PerfMetric metric)
 {
     float ms = (float)metrics.perf[metric] / PROC_FREQUENCY * 1000;
-    sprintf(buff, "%s %-12lld  %.2fms\n", message, metrics.perf[metric], ms);
+    sprintf(buff, "%s %-12lld  %05.2fms\n", message, metrics.perf[metric], ms);
     PRINT(buff);
 }
 
@@ -45,7 +50,8 @@ void PrintRelativeMetric(char* buff, char *message, PerfMetric metric, PerfMetri
 {
     float percents = (float)metrics.perf[metric] / (float)metrics.perf[parentMetric] * 100;
     float ms = (float)metrics.perf[metric] / PROC_FREQUENCY * 1000;
-    sprintf(buff, "%s %-12lld  %.2fms   %.2f%%\n", message, metrics.perf[metric], ms, percents);
+    i32 count = metrics.count[metric];
+    sprintf(buff, "%s %-12lld  %05.2fms  %-6d %.2f%%\n", message, metrics.perf[metric], ms, count, percents);
     PRINT(buff);
 }
 
@@ -53,8 +59,25 @@ void PrintStartupResults()
 {
     char buff[512] = {0};
 
-    PrintRegularMetric(buff,  "Startup       :", StartUp);
+    PrintRegularMetric (buff, "Startup       :", StartUp);
     PrintRelativeMetric(buff, " - Font Init  :", FontInitialization, StartUp);
     PrintRelativeMetric(buff, "  -- Kerning  :", FontKerningTablesInitialization, FontInitialization);
     PrintRelativeMetric(buff, "  -- Textures :", FontTexturesInitialization, FontInitialization);
+    
+}
+
+void ResetMetrics()
+{
+    memset(&metrics, 0, sizeof(metrics));
+}
+
+void PrintFrameStats()
+{
+    char buff[512] = {0};
+
+    PRINT("***********************************************\n");
+    PrintRegularMetric (buff, "Frame               :", FrameTotal);
+    PrintRelativeMetric(buff, " - Text             :", FramePrintText, FrameTotal);
+    PrintRelativeMetric(buff, "   -- Find Kerning  :", FramePrintTextFindKerning, FramePrintText);
+    PrintRelativeMetric(buff, "   -- Draw Texture  :", FramePrintTextDrawTexture, FramePrintText);
 }

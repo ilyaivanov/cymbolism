@@ -203,6 +203,7 @@ void UpdateAndDrawApp(AppState *state, MyInput *input)
 
             i32 textX = itemX + ICON_SIZE / 2 + TEXT_TO_ICON;
 
+            Start(FramePrintText);
             if (item->newLinesCount == 1)
             {
                 i32 textY = y - FONT_SIZE / 10 - 1;
@@ -211,7 +212,6 @@ void UpdateAndDrawApp(AppState *state, MyInput *input)
             }
             else
             {
-
                 for (int i = 1; i <= item->newLinesCount; i++)
                 {
                     i32 textY = y - FONT_SIZE / 10 - 1;
@@ -222,6 +222,7 @@ void UpdateAndDrawApp(AppState *state, MyInput *input)
                 }
                 y += state->fonts.regular.textMetric.tmHeight * (LINE_HEIGHT - 1);
             }
+            Stop(FramePrintText);
 
         }
 

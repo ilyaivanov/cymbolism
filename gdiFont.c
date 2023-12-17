@@ -106,10 +106,13 @@ inline void DrawTextLeftTop(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char
     for (int i = 0; i < len; i += 1)
     {
         char codepoint = *text;
+        Start(FramePrintTextDrawTexture);
         MyBitmap *glyphBitmap = GetGlyphBitmap(font, codepoint);
         DrawTextureTopLeft(bitmap, glyphBitmap, x, y, color);
+        Stop(FramePrintTextDrawTexture);
 
         char nextCodepoint = *(text + 1);
+        
         x += glyphBitmap->width + GetKerningValue(font, codepoint, nextCodepoint);
         text++;
     }
@@ -130,14 +133,19 @@ inline void DrawTextLeftCenter(MyBitmap *bitmap, FontData *font, i32 x, i32 y, c
 
 int GetKerningValue(FontData *font, char left, char right)
 {
+    Start(FramePrintTextFindKerning);
     KERNINGPAIR * pair = font->pairs;
     // TODO: optimize this into a hash or a nested arrays
     for (int i = 0; i < font->kerningPairCount; i += 1)
     {
         if (pair->wFirst == left && pair->wSecond == right)
+        {
+            Stop(FramePrintTextFindKerning);
             return pair->iKernAmount;
+        }
 
         pair++;
     }
+    Stop(FramePrintTextFindKerning);
     return 0;
 }

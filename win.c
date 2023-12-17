@@ -25,8 +25,9 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
     else if (message == WM_SIZE)
     {
         OnResize(window, &bitmapInfo, &state.canvas);
-        memset(state.canvas.pixels, BACKGROUND_COLOR_GREY, state.canvas.height * state.canvas.width * state.canvas.bytesPerPixel);
-        UpdateAndDrawApp(&state, &input);
+        // This fails for my metrics for first frame, need to think how to resolve this
+        // memset(state.canvas.pixels, BACKGROUND_COLOR_GREY, state.canvas.height * state.canvas.width * state.canvas.bytesPerPixel);
+        // UpdateAndDrawApp(&state, &input);
     }
     else if (message == WM_PAINT)
     {
@@ -53,14 +54,15 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
     HDC dc = GetDC(window);
 
     isRunning = 1;
+    i32 framesPrinted = 0;
+    #define FRAMES_TO_PRINT 10
     while (isRunning)
     {
+        Start(FrameTotal);
+
         memset(&input.keysPressed, 0, sizeof(input.keysPressed));
         input.charEventsThisFrameCount = 0;
         input.wheelDelta = 0;
-
-        //TODO: add proper FPS support. Be very carefull to collect input and react on the same frame when input hapenned
-        Sleep(14);
 
         MSG msg;
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
@@ -96,8 +98,19 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
         // reset pixels
         memset(state.canvas.pixels, BACKGROUND_COLOR_GREY, state.canvas.height * state.canvas.width * state.canvas.bytesPerPixel);
 
-        // HandleInput(&state);
         UpdateAndDrawApp(&state, &input);
         DrawBitmap(dc, &bitmapInfo, &state.canvas);
+
+        Stop(FrameTotal);
+
+        // if (framesPrinted < FRAMES_TO_PRINT)
+        {
+            PrintFrameStats();
+            framesPrinted++;
+            
+        }
+        ResetMetrics();
+        //TODO: add proper FPS support. Be very carefull to collect input and react on the same frame when input hapenned
+        Sleep(14);
     }
 }
