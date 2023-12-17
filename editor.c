@@ -19,6 +19,44 @@
 #define LINE_HEIGHT 1.2f
 #define PAGE_PADDING 30
 
+void SplitTextIntoLines(Item *item, FontData *font, u32 maxWidth)
+{
+    int currentLine = 0;
+    int runningWidth = 0;
+    int wordFirstLetterIndex = 0;
+    int wordLength = 0;
+
+    for (int i = 0; i < item->textBuffer.length; i += 1)
+    {
+        i8 ch = *(item->textBuffer.text + i);
+        
+        if ((ch == ' ' || i == item->textBuffer.length - 1) && runningWidth >= maxWidth)
+        {
+            item->newLines[++currentLine] = wordFirstLetterIndex - 1;        
+            runningWidth = wordLength;
+            wordFirstLetterIndex = i + 1;
+            wordLength = 0;
+        }
+        else 
+        {
+            int w = GetGlyphWidth(font, ch);
+            if (ch == ' ')
+            {
+                wordFirstLetterIndex = i + 1;
+                wordLength = 0;
+            }
+            else
+            {
+                wordLength += w;
+            }
+            runningWidth += w;
+        }
+    }
+
+    item->newLines[++currentLine] = item->textBuffer.length;   
+    item->newLinesCount = currentLine;
+}
+
 
 void InitApp(AppState *state)
 {
@@ -26,11 +64,50 @@ void InitApp(AppState *state)
     InitRoot(&state->root);
 
     state->selectedItem = state->root.children;
+
+
+
 }
 
+void OnAppResize(AppState *state)
+{
+    ItemInStack stack[512] = {0};
+    int currentItemInStack = -1;
+
+    stack[++currentItemInStack] = (ItemInStack){&state->root, -1};
+
+    while (currentItemInStack >= 0)
+    {
+        ItemInStack current = stack[currentItemInStack--];
+        Item *item = current.ref;
+
+        if (item->parent)
+        {
+            //TODO: remove duplication from the UI view
+            i32 maxWidth = state->canvas.width - PAGE_PADDING * 2 - (ICON_SIZE / 2 + TEXT_TO_ICON) - current.level * LEVEL_STEP;
+            SplitTextIntoLines(item, &state->fonts.regular, maxWidth);
+        }
+
+        if (item->isOpen)
+        {
+            for (int c = item->childrenCount - 1; c >= 0; c--)
+            {
+                stack[++currentItemInStack] = (ItemInStack){item->children + c, current.level + 1};
+            }
+        }
+    }
+}
+
+i32 lastWidth = 0;
 
 void UpdateAndDrawApp(AppState *state, MyInput *input)
 {
+    if(state->canvas.width != lastWidth)
+    {
+        OnAppResize(state);
+        lastWidth = state->canvas.width;
+    }
+
     if (input->keysPressed['J'])
     {
         Item *itemBelow = GetItemBelow(state->selectedItem);
@@ -104,10 +181,27 @@ void UpdateAndDrawApp(AppState *state, MyInput *input)
                 DrawSquareAtCenter(&state->canvas, itemX, itemY, ICON_SIZE - 4, COLOR_APP_BACKGROUND);
 
             i32 textX = itemX + ICON_SIZE / 2 + TEXT_TO_ICON;
-            i32 textY = itemY - FONT_SIZE / 10 - 1;
-            DrawTextLeftCenter(&state->canvas, &state->fonts.regular, textX, textY, item->textBuffer.text, item->textBuffer.length, textColor);
 
-            y += lineHeightInPixels;
+            if (item->newLinesCount == 1)
+            {
+                i32 textY = y - FONT_SIZE / 10 - 1;
+                DrawTextLeftCenter(&state->canvas, &state->fonts.regular, textX, textY, item->textBuffer.text, item->textBuffer.length, textColor);
+                y += lineHeightInPixels;
+            }
+            else
+            {
+
+                for (int i = 1; i <= item->newLinesCount; i++)
+                {
+                    i32 textY = y - FONT_SIZE / 10 - 1;
+                    char *text = item->textBuffer.text + (item->newLines[i - 1] == 0 ? item->newLines[i - 1] : item->newLines[i - 1] + 1);
+                    i32 lineLength = item->newLines[i] - item->newLines[i - 1];
+                    DrawTextLeftCenter(&state->canvas, &state->fonts.regular, textX, textY, text, lineLength, textColor);
+                    y += state->fonts.regular.textMetric.tmHeight;
+                }
+                y += state->fonts.regular.textMetric.tmHeight * (LINE_HEIGHT - 1);
+            }
+
         }
 
 

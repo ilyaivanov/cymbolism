@@ -49,6 +49,10 @@ typedef struct Item
     i32 childrenCount;
     i32 isOpen;
     StringBuffer textBuffer;
+
+    //This is a UI feature, I don't need to mix domain entities and UI representation
+    u32 newLines[64];
+    u32 newLinesCount;
 } Item;
 
 typedef struct ItemInStack
