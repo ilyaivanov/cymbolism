@@ -65,12 +65,7 @@ void InitApp(AppState *state)
     InitRoot(&state->root);
 
     state->selectedItem = state->root.children;
-
-    state->yOffset = 45;
-
 }
-
-
 
 void OnAppResize(AppState *state)
 {
@@ -116,7 +111,7 @@ inline void ScrollBy(AppState *state, i32 delta)
 
 i32 lastWidth = 0;
 
-void UpdateAndDrawApp(AppState *state, MyInput *input)
+inline void HandleInput(AppState *state, MyInput *input)
 {
     if(state->canvas.width != lastWidth)
     {
@@ -156,6 +151,11 @@ void UpdateAndDrawApp(AppState *state, MyInput *input)
         else if (state->selectedItem->childrenCount > 0)
             state->selectedItem = state->selectedItem->children;
     }
+}
+
+void UpdateAndDrawApp(AppState *state, MyInput *input)
+{
+    HandleInput(state, input);
 
     i32 lineHeightInPixels = state->fonts.regular.textMetric.tmHeight * LINE_HEIGHT;
 
