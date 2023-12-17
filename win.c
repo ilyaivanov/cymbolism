@@ -1,5 +1,7 @@
 #include <windows.h>
 #include "types.h"
+#include "performance.c"
+
 #include "win_utils.c"
 #include "drawing.c"
 

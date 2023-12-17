@@ -11,7 +11,7 @@
 #define COLOR_NORMAL_ITEM   0xdddddd
 
 
-#define FONT_SIZE 16
+#define FONT_SIZE 14
 #define FONT_FAMILY "Segoe UI"
 #define ICON_SIZE 10
 #define TEXT_TO_ICON 15
@@ -61,10 +61,19 @@ void SplitTextIntoLines(Item *item, FontData *font, u32 maxWidth)
 
 void InitApp(AppState *state)
 {
+    Start(StartUp);
+    
+    Start(FontInitialization);
     InitFontSystem(&state->fonts.regular, FONT_SIZE, FONT_FAMILY);
+    Stop(FontInitialization);
+
     InitRoot(&state->root);
 
     state->selectedItem = state->root.children;
+
+    Stop(StartUp);
+
+    PrintStartupResults();
 }
 
 void OnAppResize(AppState *state)

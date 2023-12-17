@@ -29,17 +29,20 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
     SelectObject(deviceContext, bitmap);
     SelectObject(deviceContext, font);
 
-    
+    Start(FontKerningTablesInitialization);
     fontData->kerningPairCount = GetKerningPairsW(deviceContext, 0, 0);
     fontData->pairs = malloc(sizeof(KERNINGPAIR) * fontData->kerningPairCount);
     GetKerningPairsW(deviceContext, fontData->kerningPairCount, fontData->pairs);
+    Stop(FontKerningTablesInitialization);
 
     SetBkColor(deviceContext, RGB(0, 0, 0));
     SetTextColor(deviceContext, RGB(255, 255, 255));
 
+    Start(FontTexturesInitialization);
+
     SIZE size;
     u32 bytesAllocated = 0;
-    for (wchar_t ch = 32; ch <= 500; ch += 1)
+    for (wchar_t ch = 32; ch <= 1500; ch += 1)
     {
         int len = 1;
         GetTextExtentPoint32W(deviceContext, &ch, len, &size);
@@ -72,6 +75,7 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
         }
     }
 
+    Stop(FontTexturesInitialization);
 
     GetTextMetrics(deviceContext, &fontData->textMetric);
     DeleteDC(deviceContext);
