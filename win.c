@@ -23,6 +23,7 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
     else if (message == WM_SIZE)
     {
         OnResize(window, &bitmapInfo, &state.canvas);
+        memset(state.canvas.pixels, BACKGROUND_COLOR_GREY, state.canvas.height * state.canvas.width * state.canvas.bytesPerPixel);
         UpdateAndDrawApp(&state, &input);
     }
     else if (message == WM_PAINT)
@@ -68,6 +69,18 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
             if (msg.message == WM_KEYUP)
             {
                 input.isPressed[msg.wParam] = 0;
+            }
+            if (msg.message == WM_MOUSEWHEEL)
+            {
+                i32 nextOffset = state.yOffset + GET_WHEEL_DELTA_WPARAM(msg.wParam);
+
+                if(nextOffset < 0)
+                    nextOffset = 0;
+
+                if(nextOffset > state.pageHeight - state.canvas.height)
+                    nextOffset = state.pageHeight - state.canvas.height;
+                    
+                state.yOffset = nextOffset;
             }
             if (msg.message == WM_KEYDOWN)
             {

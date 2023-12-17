@@ -102,6 +102,9 @@ typedef struct AppState
     MyBitmap canvas;
     EditorMode editMode;
 
+    // TODO: this will be moved in to the model. Currently I'm relying on the height from the prev frame
+    i32 pageHeight;
+    i32 yOffset;
     i32 cursorPos;
     i32 isFileSaved;
 } AppState;

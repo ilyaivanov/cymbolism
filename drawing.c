@@ -52,8 +52,11 @@ inline void DrawSquareAtCenter(MyBitmap *bitmap, i32 x, i32 y, i32 size, i32 col
 
 inline void DrawTextureTopLeft(MyBitmap *destination, MyBitmap *texture, float textX, float textY, u32 color)
 {
-    u32 width = texture->width;
-    u32 height = texture->height;
+    i32 width = texture->width;
+    i32 height = texture->height;
+
+    u32 *sourceRow = (u32*)texture->pixels;
+
 
     if (textX >= destination->width)
     {
@@ -80,11 +83,11 @@ inline void DrawTextureTopLeft(MyBitmap *destination, MyBitmap *texture, float t
     else if (textY < 0)
     {
         height = textY + height;
+        sourceRow += width * (i32)(-textY);
         textY = 0;
     }
 
     u32 *destinationRow = (u32 *)destination->pixels + destination->width * (u32)textY + (u32)textX;
-    u32 *sourceRow = (u32*)texture->pixels;
 
     u32 colorR = (color >> 16) & 0xff;
     u32 colorG = (color >> 8) & 0xff;

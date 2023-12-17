@@ -4,9 +4,9 @@
 #include "item.c"
 #include "selection.c"
 
-#define BACKGROUND_COLOR_GREY 0x11
-#define COLOR_APP_BACKGROUND 0x111111
-#define COLOR_SELECTION_BAR 0x272930
+#define BACKGROUND_COLOR_GREY 0x18
+#define COLOR_APP_BACKGROUND 0x181818
+#define COLOR_SELECTION_BAR 0x2F2F2F
 #define COLOR_SELECTED_ITEM 0xffffff
 #define COLOR_NORMAL_ITEM   0xdddddd
 
@@ -65,7 +65,7 @@ void InitApp(AppState *state)
 
     state->selectedItem = state->root.children;
 
-
+    state->yOffset = 45;
 
 }
 
@@ -141,7 +141,7 @@ void UpdateAndDrawApp(AppState *state, MyInput *input)
     i32 lineHeightInPixels = state->fonts.regular.textMetric.tmHeight * LINE_HEIGHT;
 
     i32 x = PAGE_PADDING;
-    i32 y = PAGE_PADDING + lineHeightInPixels / 2;
+    i32 y = PAGE_PADDING + lineHeightInPixels / 2 - state->yOffset;
 
     ItemInStack stack[512] = {0};
     int currentItemInStack = -1;
@@ -159,17 +159,10 @@ void UpdateAndDrawApp(AppState *state, MyInput *input)
             i32 isItemSelected = item == state->selectedItem;
             if(item == state->selectedItem)
             {
-                // i32 selectionColor = state->editMode == EditMode_Edit ? SELECTION_BAR_EDIT_MODE : COLOR_SELECTION_BAR;
                 i32 selectionColor = COLOR_SELECTION_BAR;
-                DrawRect(&state->canvas, 0, y - lineHeightInPixels / 2, state->canvas.width, lineHeightInPixels, selectionColor);
-
-                // if(state->editMode == EditMode_Edit)
-                // {
-                //     i32 selectionWidth = GetTextWidth(&state->fonts.regular, item->textBuffer.text, state->cursorPosition) - 1;
-                //     i32 cursorX = x + STEP * current.level + selectionWidth + ICON_SIZE / 2 + TEXT_TO_ICON_DISTANCE;
-                //     i32 cursorY = y - height / 2;
-                //     DrawRect(&state->canvas, cursorX ,cursorY, 2, height, 0xffffffff);
-                // }
+                i32 rectY = y - lineHeightInPixels / 2;
+                i32 rectHeight = (item->newLinesCount + (LINE_HEIGHT - 1)) * state->fonts.regular.textMetric.tmHeight;
+                DrawRect(&state->canvas, 0, rectY, state->canvas.width, rectHeight, selectionColor);
             }
 
             i32 textColor = isItemSelected ? COLOR_SELECTED_ITEM : COLOR_NORMAL_ITEM;
@@ -212,5 +205,14 @@ void UpdateAndDrawApp(AppState *state, MyInput *input)
                 stack[++currentItemInStack] = (ItemInStack){item->children + c, current.level + 1};
             }
         }
+    }
+
+    state->pageHeight = y + state->yOffset;
+    if(state->pageHeight > state->canvas.height)
+    {
+        i32 scrollY = (i32)((float)state->yOffset * (float)(state->canvas.height / (float)state->pageHeight));
+        i32 scrollHeight = state->canvas.height * state->canvas.height / state->pageHeight;
+        i32 scrollWidth = 15;
+        DrawRect(&state->canvas, state->canvas.width - scrollWidth, scrollY, scrollWidth, scrollHeight, 0x552D2E);
     }
 }
