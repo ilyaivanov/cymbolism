@@ -102,7 +102,7 @@ HWND OpenGameWindow(HINSTANCE instance, WNDPROC OnEvent)
 
     int windowWidth = 1000;
     int windowHeight = 1200;
-    HWND window = CreateWindowW(windowClass.lpszClassName, L"Cymbolism", EDITOR_DEFAULT_WINDOW_STYLE | WS_VISIBLE,
+    HWND window = CreateWindowW(windowClass.lpszClassName, (wchar_t*)"Cymbolism", EDITOR_DEFAULT_WINDOW_STYLE | WS_VISIBLE,
                          /* x */ screenWidth - windowWidth - 10,
                          /* y */ 10,
                          /* w */ windowWidth,

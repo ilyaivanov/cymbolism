@@ -39,7 +39,7 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
 
     SIZE size;
     u32 bytesAllocated = 0;
-    for (wchar_t ch = 32; ch <= 2000; ch += 1)
+    for (wchar_t ch = 32; ch <= 500; ch += 1)
     {
         int len = 1;
         GetTextExtentPoint32W(deviceContext, &ch, len, &size);
@@ -115,6 +115,11 @@ inline void DrawTextLeftTop(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char
 inline void DrawTextLeftBottom(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char *text, i32 len, i32 color){
     DrawTextLeftTop(bitmap, font, x, y - font->textMetric.tmHeight, text, len, color);
 }
+
+inline void DrawTextLeftCenter(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char *text, i32 len, i32 color){
+    DrawTextLeftTop(bitmap, font, x, y - font->textMetric.tmHeight / 2, text, len, color);
+}
+
 
 
 
