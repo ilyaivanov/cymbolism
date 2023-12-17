@@ -54,8 +54,6 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
     HDC dc = GetDC(window);
 
     isRunning = 1;
-    i32 framesPrinted = 0;
-    #define FRAMES_TO_PRINT 10
     while (isRunning)
     {
         Start(FrameTotal);
@@ -103,12 +101,8 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
 
         Stop(FrameTotal);
 
-        // if (framesPrinted < FRAMES_TO_PRINT)
-        {
-            PrintFrameStats();
-            framesPrinted++;
+        PrintFrameStats();
             
-        }
         ResetMetrics();
         //TODO: add proper FPS support. Be very carefull to collect input and react on the same frame when input hapenned
         Sleep(14);

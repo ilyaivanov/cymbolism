@@ -91,7 +91,8 @@ u8 GetGlyphWidth(FontData *font,char codepoint)
     return font->widths[codepoint];
 }
 
-inline i32 GetTextWidth(FontData *font, char *text, i32 len){
+inline i32 GetTextWidth(FontData *font, char *text, i32 len)
+{
     i32 res = 0;
     for(int i = 0; i < len; i++)
     {
@@ -101,7 +102,8 @@ inline i32 GetTextWidth(FontData *font, char *text, i32 len){
     return res;
 }
 
-inline void DrawTextLeftTop(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char *text, i32 len, i32 color){
+inline void DrawTextLeftTop(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char *text, i32 len, i32 color)
+{
     char ch = *text;
     for (int i = 0; i < len; i += 1)
     {
@@ -119,17 +121,15 @@ inline void DrawTextLeftTop(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char
 
 }
 
-inline void DrawTextLeftBottom(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char *text, i32 len, i32 color){
+inline void DrawTextLeftBottom(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char *text, i32 len, i32 color)
+{
     DrawTextLeftTop(bitmap, font, x, y - font->textMetric.tmHeight, text, len, color);
 }
 
-inline void DrawTextLeftCenter(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char *text, i32 len, i32 color){
+inline void DrawTextLeftCenter(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char *text, i32 len, i32 color)
+{
     DrawTextLeftTop(bitmap, font, x, y - font->textMetric.tmHeight / 2, text, len, color);
 }
-
-
-
-
 
 int GetKerningValue(FontData *font, char left, char right)
 {
