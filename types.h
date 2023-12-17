@@ -67,6 +67,7 @@ typedef struct MyInput
     WPARAM charEventsThisFrame[32];
     i32 charEventsThisFrameCount;
     i32 isPressed[256];
+    i32 wheelDelta;
 } MyInput;
 
 typedef struct FontData 

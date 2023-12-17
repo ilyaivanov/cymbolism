@@ -19,6 +19,7 @@
 #define LINE_HEIGHT 1.2f
 #define PAGE_PADDING 30
 
+
 void SplitTextIntoLines(Item *item, FontData *font, u32 maxWidth)
 {
     int currentLine = 0;
@@ -69,6 +70,8 @@ void InitApp(AppState *state)
 
 }
 
+
+
 void OnAppResize(AppState *state)
 {
     ItemInStack stack[512] = {0};
@@ -98,6 +101,19 @@ void OnAppResize(AppState *state)
     }
 }
 
+inline void ScrollBy(AppState *state, i32 delta)
+{
+    i32 nextOffset = state->yOffset + delta;
+
+    if (nextOffset < 0)
+        nextOffset = 0;
+
+    if (nextOffset > state->pageHeight - state->canvas.height)
+        nextOffset = state->pageHeight - state->canvas.height;
+
+    state->yOffset = nextOffset;
+}
+
 i32 lastWidth = 0;
 
 void UpdateAndDrawApp(AppState *state, MyInput *input)
@@ -107,6 +123,9 @@ void UpdateAndDrawApp(AppState *state, MyInput *input)
         OnAppResize(state);
         lastWidth = state->canvas.width;
     }
+
+    if(input->wheelDelta)
+        ScrollBy(state, -input->wheelDelta);
 
     if (input->keysPressed['J'])
     {

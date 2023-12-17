@@ -55,6 +55,7 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
     {
         memset(&input.keysPressed, 0, sizeof(input.keysPressed));
         input.charEventsThisFrameCount = 0;
+        input.wheelDelta = 0;
 
         //TODO: add proper FPS support. Be very carefull to collect input and react on the same frame when input hapenned
         Sleep(14);
@@ -72,15 +73,7 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
             }
             if (msg.message == WM_MOUSEWHEEL)
             {
-                i32 nextOffset = state.yOffset + GET_WHEEL_DELTA_WPARAM(msg.wParam);
-
-                if(nextOffset < 0)
-                    nextOffset = 0;
-
-                if(nextOffset > state.pageHeight - state.canvas.height)
-                    nextOffset = state.pageHeight - state.canvas.height;
-                    
-                state.yOffset = nextOffset;
+                input.wheelDelta = GET_WHEEL_DELTA_WPARAM(msg.wParam);
             }
             if (msg.message == WM_KEYDOWN)
             {
