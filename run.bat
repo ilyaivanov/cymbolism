@@ -5,7 +5,7 @@ pushd build
 
 set CompilerOptions=/nologo /MD /Zi
 
-set LinkerOptions=user32.lib gdi32.lib winmm.lib dwmapi.lib shell32.lib
+set LinkerOptions=user32.lib gdi32.lib winmm.lib dwmapi.lib
 
 cl %CompilerOptions% ..\win.c %LinkerOptions%
 

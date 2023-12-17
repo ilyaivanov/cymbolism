@@ -2,6 +2,7 @@
 #include "types.h"
 #include "win_utils.c"
 #include "drawing.c"
+
 #include "gdiFont.c"
 #include "editor.c"
 
@@ -31,6 +32,10 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
         DrawBitmap(dc, &bitmapInfo, &state.canvas);
         EndPaint(window, &paint);
     }
+    else if (message == WM_CHAR)
+    {
+        input.charEventsThisFrame[input.charEventsThisFrameCount++] = wParam;
+    }
 
     return DefWindowProc(window, message, wParam, lParam);
 }
@@ -47,7 +52,6 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
     isRunning = 1;
     while (isRunning)
     {
-
         memset(&input.keysPressed, 0, sizeof(input.keysPressed));
         input.charEventsThisFrameCount = 0;
 
@@ -57,25 +61,21 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
         MSG msg;
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
         {
-            if (msg.message == WM_KEYDOWN){
+            if (msg.message == WM_KEYDOWN)
+            {
                 input.isPressed[msg.wParam] = 1;
             }
             if (msg.message == WM_KEYUP)
             {
                 input.isPressed[msg.wParam] = 0;
             }
-            if (msg.message == WM_CHAR)
-            {
-                input.charEventsThisFrame[input.charEventsThisFrameCount++] = msg.wParam;
-            }
             if (msg.message == WM_KEYDOWN)
             {
-                
-                // if (msg.wParam == VK_SPACE && state.editMode == EditMode_Normal)
-                // {
-                //     isFullscreen = isFullscreen ? 0 : 1;
-                //     ToggleFullscreen(window, isFullscreen);
-                // }
+                if (msg.wParam == VK_F11)
+                {
+                    isFullscreen = isFullscreen ? 0 : 1;
+                    ToggleFullscreen(window, isFullscreen);
+                }
                 if(msg.wParam < 256)
                 {
                     input.keysPressed[msg.wParam] = 1;

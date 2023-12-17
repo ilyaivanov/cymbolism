@@ -88,21 +88,21 @@ inline void DrawBitmap(HDC dc, BITMAPINFO *bitmapInfo, MyBitmap *bitmap){
 
 HWND OpenGameWindow(HINSTANCE instance, WNDPROC OnEvent)
 {
-    WNDCLASS windowClass = {
+    WNDCLASSW windowClass = {
         .hInstance = instance,
         .lpfnWndProc = OnEvent,
-        .lpszClassName = "MyWindow",
+        .lpszClassName = L"MyWindow",
         .style = CS_VREDRAW | CS_HREDRAW | CS_OWNDC,
         .hCursor = LoadCursor(0, IDC_ARROW),
     };
-    RegisterClassA(&windowClass);
+    RegisterClassW(&windowClass);
 
     HDC dc = GetDC(0);
     int screenWidth = GetDeviceCaps(dc, HORZRES);
 
     int windowWidth = 1000;
     int windowHeight = 1200;
-    HWND window = CreateWindowA(windowClass.lpszClassName, "Cymbolism", EDITOR_DEFAULT_WINDOW_STYLE | WS_VISIBLE,
+    HWND window = CreateWindowW(windowClass.lpszClassName, L"Cymbolism", EDITOR_DEFAULT_WINDOW_STYLE | WS_VISIBLE,
                          /* x */ screenWidth - windowWidth - 10,
                          /* y */ 10,
                          /* w */ windowWidth,

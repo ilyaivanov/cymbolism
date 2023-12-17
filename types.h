@@ -60,17 +60,18 @@ typedef struct ItemInStack
 typedef struct MyInput
 {
     i32 keysPressed[256];
-    i32 charEventsThisFrame[32];
+    WPARAM charEventsThisFrame[32];
     i32 charEventsThisFrameCount;
     i32 isPressed[256];
 } MyInput;
 
-typedef struct FontData {
-    MyBitmap textures[256];
+typedef struct FontData 
+{
+    MyBitmap textures[2000];
 
     // Need to use ABC structure for this 
     // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getcharabcwidthsa
-    u8 widths[256];
+    u8 widths[2000];
 
     TEXTMETRIC textMetric;
 
@@ -89,7 +90,8 @@ typedef enum EditorMode
     EditorMode_Insert,
 } EditorMode;
 
-typedef struct AppState {
+typedef struct AppState 
+{
     Item root;
     Item *selectedItem;
     Fonts fonts;
