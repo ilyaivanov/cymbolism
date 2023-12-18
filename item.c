@@ -124,8 +124,7 @@ void InitRoot(Item * root){
     AssignChildren(root->children + 3, asuraChildren, ArrayLength(asuraChildren));
     AssignChildren((root->children + 3)->children, lostEdemItems, ArrayLength(lostEdemItems));
     AssignChildren((root->children + 3)->children + 3, lostEdemItems, ArrayLength(lostEdemItems));
-    AssignChildren(root->children + 4, quotes, ArrayLength(quotes));
-    // AssignChildren(root->children + 17, solarFieldsChildren, ArrayLength(solarFieldsChildren));
-    // AssignChildren(root->children + 18, syncChildren, ArrayLength(syncChildren));
 
+    for (int i = 0; i < 8; i++)
+        AssignChildren(root->children + 4 + i, quotes, ArrayLength(quotes));
 }

@@ -1,6 +1,23 @@
 #include "types.h"
 #include "windows.h"
 
+
+inline int HashAndProbeIndex(FontData *font, u16 left, u16 right)
+{
+    i32 keysMask = ArrayLength(font->pairsHash) - 1;
+    i32 index = (left * 19 + right * 7) & keysMask;
+    int i = 1;
+    while(font->pairsHash[index].left != 0 && font->pairsHash[index].left != left && font->pairsHash[index].right != right)
+    {
+        index += (i*i);
+        i++;
+        if(index >= ArrayLength(font->pairsHash))
+            index = index & keysMask;
+        
+    }
+    return index;
+}
+
 void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
 {
     HDC deviceContext = CreateCompatibleDC(0);
@@ -30,9 +47,23 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
     SelectObject(deviceContext, font);
 
     Start(FontKerningTablesInitialization);
-    fontData->kerningPairCount = GetKerningPairsW(deviceContext, 0, 0);
-    fontData->pairs = malloc(sizeof(KERNINGPAIR) * fontData->kerningPairCount);
-    GetKerningPairsW(deviceContext, fontData->kerningPairCount, fontData->pairs);
+    i32 kerningPairCount = GetKerningPairsW(deviceContext, 0, 0);
+    i32 pairsSizeAllocated = sizeof(KERNINGPAIR) * kerningPairCount;
+    KERNINGPAIR *pairs = malloc(pairsSizeAllocated);
+    GetKerningPairsW(deviceContext, kerningPairCount, pairs);
+
+    i32 hashSize = ArrayLength(fontData->pairsHash);
+    i32 keysMask = hashSize - 1;
+    for(int i = 0; i < kerningPairCount; i++)
+    {
+        KERNINGPAIR *pair = pairs + i;
+        i32 index = HashAndProbeIndex(fontData, pair->wFirst, pair->wSecond);
+
+        fontData->pairsHash[index].left = pair->wFirst;
+        fontData->pairsHash[index].right = pair->wSecond;
+        fontData->pairsHash[index].val = pair->iKernAmount;
+    }
+    free(pairs);
     Stop(FontKerningTablesInitialization);
 
     SetBkColor(deviceContext, RGB(0, 0, 0));
@@ -78,6 +109,7 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
     Stop(FontTexturesInitialization);
 
     GetTextMetrics(deviceContext, &fontData->textMetric);
+    DeleteObject(bitmap);
     DeleteDC(deviceContext);
 }
 
@@ -131,21 +163,17 @@ inline void DrawTextLeftCenter(MyBitmap *bitmap, FontData *font, i32 x, i32 y, c
     DrawTextLeftTop(bitmap, font, x, y - font->textMetric.tmHeight / 2, text, len, color);
 }
 
-int GetKerningValue(FontData *font, char left, char right)
+inline int GetKerningValue(FontData *font, u16 left, u16 right)
 {
     Start(FramePrintTextFindKerning);
-    KERNINGPAIR * pair = font->pairs;
-    // TODO: optimize this into a hash or a nested arrays
-    for (int i = 0; i < font->kerningPairCount; i += 1)
-    {
-        if (pair->wFirst == left && pair->wSecond == right)
-        {
-            Stop(FramePrintTextFindKerning);
-            return pair->iKernAmount;
-        }
+    i32 index = HashAndProbeIndex(font, left, right);
 
-        pair++;
+    if(font->pairsHash[index].left != left && font->pairsHash[index].right != right)
+    {
+        Stop(FramePrintTextFindKerning);
+        return 0;
     }
+
     Stop(FramePrintTextFindKerning);
-    return 0;
+    return font->pairsHash[index].val;
 }

@@ -70,6 +70,13 @@ typedef struct MyInput
     i32 wheelDelta;
 } MyInput;
 
+typedef struct FontKerningPair
+{
+    u16 left;
+    u16 right;
+    i8 val;
+}FontKerningPair;
+
 typedef struct FontData 
 {
     MyBitmap textures[2000];
@@ -80,8 +87,7 @@ typedef struct FontData
 
     TEXTMETRIC textMetric;
 
-    int kerningPairCount;
-    KERNINGPAIR *pairs;
+    FontKerningPair pairsHash[16 * 1024];
 } FontData;
 
 typedef struct Fonts
