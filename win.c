@@ -12,7 +12,6 @@ MyInput input = {0};
 BITMAPINFO bitmapInfo = {0};
 AppState state = {0};
 
-
 i32 isRunning = 0;
 i32 isFullscreen = 0;
 

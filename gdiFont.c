@@ -81,12 +81,12 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
     DeleteDC(deviceContext);
 }
 
-MyBitmap *GetGlyphBitmap(FontData *font, char codepoint)
+inline MyBitmap *GetGlyphBitmap(FontData *font, char codepoint)
 {
     return &font->textures[codepoint];
 }
 
-u8 GetGlyphWidth(FontData *font,char codepoint)
+inline u8 GetGlyphWidth(FontData *font,char codepoint)
 {
     return font->widths[codepoint];
 }

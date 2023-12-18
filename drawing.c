@@ -57,7 +57,6 @@ inline void DrawTextureTopLeft(MyBitmap *destination, MyBitmap *texture, float t
 
     u32 *sourceRow = (u32*)texture->pixels;
 
-
     if (textX >= destination->width)
     {
         return;
