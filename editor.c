@@ -63,9 +63,7 @@ void InitApp(AppState *state)
 {
     Start(StartUp);
     
-    Start(FontInitialization);
     InitFontSystem(&state->fonts.regular, FONT_SIZE, FONT_FAMILY);
-    Stop(FontInitialization);
 
     InitRoot(&state->root);
 

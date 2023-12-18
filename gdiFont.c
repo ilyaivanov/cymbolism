@@ -20,6 +20,8 @@ inline int HashAndProbeIndex(FontData *font, u16 left, u16 right)
 
 void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
 {
+    Start(FontInitialization);
+
     HDC deviceContext = CreateCompatibleDC(0);
  
  
@@ -111,6 +113,8 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
     GetTextMetrics(deviceContext, &fontData->textMetric);
     DeleteObject(bitmap);
     DeleteDC(deviceContext);
+
+    Stop(FontInitialization);
 }
 
 inline MyBitmap *GetGlyphBitmap(FontData *font, char codepoint)
