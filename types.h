@@ -114,6 +114,10 @@ typedef struct AppState
     i32 yOffset;
     i32 cursorPos;
     i32 isFileSaved;
+
+    //used when rendering items as "closures"
+    i32 runningX;
+    i32 runningY;
 } AppState;
 
 #endif

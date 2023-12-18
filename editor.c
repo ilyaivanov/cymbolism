@@ -74,7 +74,7 @@ void InitApp(AppState *state)
 }
 
 //TODO: check macros if function call would be too slow
-void ForEachVisibleItem(AppState *state, void (*handler)(AppState *state, Item * item, i32 level))
+inline void ForEachVisibleItem(AppState *state, void (*handler)(AppState *state, Item * item, i32 level))
 {
     ItemInStack stack[512] = {0};
     int currentItemInStack = -1;
@@ -197,88 +197,68 @@ inline void HandleInput(AppState *state, MyInput *input)
     }
 }
 
+void RenderItem(AppState *state, Item *item, i32 level)
+{
+    i32 lineHeightInPixels = state->fonts.regular.textMetric.tmHeight * LINE_HEIGHT;
+
+    i32 isItemSelected = item == state->selectedItem;
+    if (item == state->selectedItem)
+    {
+        i32 selectionColor = COLOR_SELECTION_BAR;
+        i32 rectY = state->runningY - lineHeightInPixels / 2;
+        i32 rectHeight = (item->newLinesCount + (LINE_HEIGHT - 1)) * state->fonts.regular.textMetric.tmHeight;
+
+        // TODO: ugly change of offsets, will take place only in the next frame
+        if (rectY < 50)
+            ScrollBy(state, rectY - 50);
+        if (rectY + rectHeight > state->canvas.height - 50)
+            ScrollBy(state, rectHeight);
+
+        DrawRect(&state->canvas, 0, rectY, state->canvas.width, rectHeight, selectionColor);
+    }
+
+    i32 textColor = isItemSelected ? COLOR_SELECTED_ITEM : COLOR_NORMAL_ITEM;
+    i32 itemX = state->runningX + level * LEVEL_STEP;
+    i32 itemY = state->runningY;
+    DrawSquareAtCenter(&state->canvas, itemX, itemY, ICON_SIZE, 0x888888);
+
+    if (item->childrenCount == 0)
+        DrawSquareAtCenter(&state->canvas, itemX, itemY, ICON_SIZE - 4, COLOR_APP_BACKGROUND);
+
+    i32 textX = itemX + ICON_SIZE / 2 + TEXT_TO_ICON;
+
+    Start(FramePrintText);
+    if (item->newLinesCount == 1)
+    {
+        i32 textY = state->runningY - FONT_SIZE / 10 - 1;
+        DrawTextLeftCenter(&state->canvas, &state->fonts.regular, textX, textY, item->textBuffer.text, item->textBuffer.length, textColor);
+        state->runningY += lineHeightInPixels;
+    }
+    else
+    {
+        for (int i = 1; i <= item->newLinesCount; i++)
+        {
+            i32 textY = state->runningY - FONT_SIZE / 10 - 1;
+            char *text = item->textBuffer.text + (item->newLines[i - 1] == 0 ? item->newLines[i - 1] : item->newLines[i - 1] + 1);
+            i32 lineLength = item->newLines[i] - item->newLines[i - 1];
+            DrawTextLeftCenter(&state->canvas, &state->fonts.regular, textX, textY, text, lineLength, textColor);
+            state->runningY += state->fonts.regular.textMetric.tmHeight;
+        }
+        state->runningY += state->fonts.regular.textMetric.tmHeight * (LINE_HEIGHT - 1);
+    }
+    Stop(FramePrintText);
+}
+
 void UpdateAndDrawApp(AppState *state, MyInput *input)
 {
     HandleInput(state, input);
 
     i32 lineHeightInPixels = state->fonts.regular.textMetric.tmHeight * LINE_HEIGHT;
 
-    i32 x = PAGE_PADDING;
-    i32 y = PAGE_PADDING + lineHeightInPixels / 2 - state->yOffset;
-
-    ItemInStack stack[512] = {0};
-    int currentItemInStack = -1;
-
-    stack[++currentItemInStack] = (ItemInStack){&state->root, -1};
-
-    while(currentItemInStack >= 0)
-    {
-        ItemInStack current = stack[currentItemInStack--];
-        Item *item = current.ref;
-
-
-        if(item->parent) // Skip root items without a parent
-        {
-            i32 isItemSelected = item == state->selectedItem;
-            if(item == state->selectedItem)
-            {
-                i32 selectionColor = COLOR_SELECTION_BAR;
-                i32 rectY = y - lineHeightInPixels / 2;
-                i32 rectHeight = (item->newLinesCount + (LINE_HEIGHT - 1)) * state->fonts.regular.textMetric.tmHeight;
-                
-
-                //TODO: ugly change of offsets, will take place only in the next frame
-                if(rectY < 50)
-                    ScrollBy(state, rectY - 50);
-                if(rectY + rectHeight > state->canvas.height - 50)
-                    ScrollBy(state, rectHeight);
-
-
-                DrawRect(&state->canvas, 0, rectY, state->canvas.width, rectHeight, selectionColor);
-            }
-
-            i32 textColor = isItemSelected ? COLOR_SELECTED_ITEM : COLOR_NORMAL_ITEM;
-            i32 itemX = x + current.level * LEVEL_STEP;
-            i32 itemY = y;
-            DrawSquareAtCenter(&state->canvas, itemX, itemY, ICON_SIZE, 0x888888);
-
-            if(item->childrenCount == 0)
-                DrawSquareAtCenter(&state->canvas, itemX, itemY, ICON_SIZE - 4, COLOR_APP_BACKGROUND);
-
-            i32 textX = itemX + ICON_SIZE / 2 + TEXT_TO_ICON;
-
-            Start(FramePrintText);
-            if (item->newLinesCount == 1)
-            {
-                i32 textY = y - FONT_SIZE / 10 - 1;
-                DrawTextLeftCenter(&state->canvas, &state->fonts.regular, textX, textY, item->textBuffer.text, item->textBuffer.length, textColor);
-                y += lineHeightInPixels;
-            }
-            else
-            {
-                for (int i = 1; i <= item->newLinesCount; i++)
-                {
-                    i32 textY = y - FONT_SIZE / 10 - 1;
-                    char *text = item->textBuffer.text + (item->newLines[i - 1] == 0 ? item->newLines[i - 1] : item->newLines[i - 1] + 1);
-                    i32 lineLength = item->newLines[i] - item->newLines[i - 1];
-                    DrawTextLeftCenter(&state->canvas, &state->fonts.regular, textX, textY, text, lineLength, textColor);
-                    y += state->fonts.regular.textMetric.tmHeight;
-                }
-                y += state->fonts.regular.textMetric.tmHeight * (LINE_HEIGHT - 1);
-            }
-            Stop(FramePrintText);
-
-        }
-
-
-        if(item->isOpen)
-        {
-            for (int c = item->childrenCount - 1; c >= 0; c--)
-            {
-                stack[++currentItemInStack] = (ItemInStack){item->children + c, current.level + 1};
-            }
-        }
-    }
+    state->runningX = PAGE_PADDING;
+    state->runningY = PAGE_PADDING + lineHeightInPixels / 2 - state->yOffset;
+    
+    ForEachVisibleItem(state, RenderItem);
 
     if(state->pageHeight > state->canvas.height)
     {
