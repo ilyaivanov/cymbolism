@@ -10,7 +10,6 @@
 #define COLOR_SELECTED_ITEM 0xffffff
 #define COLOR_NORMAL_ITEM   0xdddddd
 
-
 #define FONT_SIZE 14
 #define FONT_FAMILY "Segoe UI"
 #define ICON_SIZE 10
@@ -74,7 +73,8 @@ void InitApp(AppState *state)
     PrintStartupResults();
 }
 
-void OnAppResize(AppState *state)
+//TODO: check macros if function call would be too slow
+void ForEachVisibleItem(AppState *state, void (*handler)(AppState *state, Item * item, i32 level))
 {
     ItemInStack stack[512] = {0};
     int currentItemInStack = -1;
@@ -88,9 +88,7 @@ void OnAppResize(AppState *state)
 
         if (item->parent)
         {
-            //TODO: remove duplication from the UI view
-            i32 maxWidth = state->canvas.width - PAGE_PADDING * 2 - (ICON_SIZE / 2 + TEXT_TO_ICON) - current.level * LEVEL_STEP;
-            SplitTextIntoLines(item, &state->fonts.regular, maxWidth);
+            handler(state, current.ref, current.level);
         }
 
         if (item->isOpen)
@@ -101,6 +99,17 @@ void OnAppResize(AppState *state)
             }
         }
     }
+}
+
+void UpdateLines(AppState *state, Item *item, i32 level)
+{
+    i32 maxWidth = state->canvas.width - PAGE_PADDING * 2 - (ICON_SIZE / 2 + TEXT_TO_ICON) - level * LEVEL_STEP;
+    SplitTextIntoLines(item, &state->fonts.regular, maxWidth);
+}
+
+void OnAppResize(AppState *state)
+{
+    ForEachVisibleItem(state, UpdateLines);
 }
 
 inline void ScrollBy(AppState *state, i32 delta)
@@ -116,6 +125,27 @@ inline void ScrollBy(AppState *state, i32 delta)
     state->yOffset = nextOffset;
 }
 
+
+void AppendPageHeight(AppState *state, Item *item, i32 level)
+{
+    if (item->newLinesCount == 1)
+        state->pageHeight += state->fonts.regular.textMetric.tmHeight * LINE_HEIGHT;
+    else
+    {
+        for (int i = 1; i <= item->newLinesCount; i++)
+        {
+            state->pageHeight += state->fonts.regular.textMetric.tmHeight;
+        }
+        state->pageHeight += state->fonts.regular.textMetric.tmHeight * (LINE_HEIGHT - 1);
+    }
+}
+
+inline void UpdateModel(AppState *state)
+{
+    state->pageHeight = 0;
+    ForEachVisibleItem(state, AppendPageHeight);
+}
+
 i32 lastWidth = 0;
 
 inline void HandleInput(AppState *state, MyInput *input)
@@ -123,6 +153,7 @@ inline void HandleInput(AppState *state, MyInput *input)
     if(state->canvas.width != lastWidth)
     {
         OnAppResize(state);
+        UpdateModel(state);
         lastWidth = state->canvas.width;
     }
 
@@ -146,7 +177,10 @@ inline void HandleInput(AppState *state, MyInput *input)
     if (input->keysPressed['H'])
     {
         if (state->selectedItem->isOpen)
+        {
             state->selectedItem->isOpen = 0;
+            UpdateModel(state);
+        }
         else if (state->selectedItem->parent->parent)
             state->selectedItem = state->selectedItem->parent;
     }
@@ -154,7 +188,10 @@ inline void HandleInput(AppState *state, MyInput *input)
     if (input->keysPressed['L'])
     {
         if (!state->selectedItem->isOpen && state->selectedItem->childrenCount > 0)
+        {
             state->selectedItem->isOpen = 1;
+            UpdateModel(state);
+        }
         else if (state->selectedItem->childrenCount > 0)
             state->selectedItem = state->selectedItem->children;
     }
@@ -188,6 +225,15 @@ void UpdateAndDrawApp(AppState *state, MyInput *input)
                 i32 selectionColor = COLOR_SELECTION_BAR;
                 i32 rectY = y - lineHeightInPixels / 2;
                 i32 rectHeight = (item->newLinesCount + (LINE_HEIGHT - 1)) * state->fonts.regular.textMetric.tmHeight;
+                
+
+                //TODO: ugly change of offsets, will take place only in the next frame
+                if(rectY < 50)
+                    ScrollBy(state, rectY - 50);
+                if(rectY + rectHeight > state->canvas.height - 50)
+                    ScrollBy(state, rectHeight);
+
+
                 DrawRect(&state->canvas, 0, rectY, state->canvas.width, rectHeight, selectionColor);
             }
 
@@ -234,7 +280,6 @@ void UpdateAndDrawApp(AppState *state, MyInput *input)
         }
     }
 
-    state->pageHeight = y + state->yOffset;
     if(state->pageHeight > state->canvas.height)
     {
         i32 scrollY = (i32)((float)state->yOffset * (float)(state->canvas.height / (float)state->pageHeight));
