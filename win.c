@@ -25,8 +25,8 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
     {
         OnResize(window, &bitmapInfo, &state.canvas);
         // This fails for my metrics for first frame, need to think how to resolve this
-        // memset(state.canvas.pixels, BACKGROUND_COLOR_GREY, state.canvas.height * state.canvas.width * state.canvas.bytesPerPixel);
-        // UpdateAndDrawApp(&state, &input);
+        memset(state.canvas.pixels, BACKGROUND_COLOR_GREY, state.canvas.height * state.canvas.width * state.canvas.bytesPerPixel);
+        UpdateAndDrawApp(&state, &input);
     }
     else if (message == WM_PAINT)
     {
