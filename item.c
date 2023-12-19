@@ -138,10 +138,6 @@ void FreeItem(AppState *state, Item *item)
 
 Item* RemoveItem(AppState *state, Item *item)
 {
-    // TODO: before commiting this I need to document what changes to the memory I'm making
-    // Moving Items around breaks parent links. I need to malloc individual Items and move references around
-    // Design a tests which whould emulate an extensive work with items and monitor how memory is being used
-
     ForEachActualChild(state, item, FreeItem);
     FreeItem(state, item);
     
