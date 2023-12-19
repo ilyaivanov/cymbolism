@@ -1,11 +1,65 @@
 #include "types.h"
 
+typedef void ForEachLeveledHandler(AppState *state, Item * item, i32 level);
+
+inline Item* GetChildAt(Item *parent, i32 index)
+{
+    return *(parent->children + index);
+}
+
+//TODO: check macros if function call would be too slow
+//This will be moved inside UI model
+inline void ForEachVisibleChild(AppState *state, Item *parent, ForEachLeveledHandler *handler)
+{
+    ItemInStack stack[512] = {0};
+    int currentItemInStack = -1;
+
+    for (int c = parent->childrenCount - 1; c >= 0; c--)
+        stack[++currentItemInStack] = (ItemInStack){GetChildAt(parent, c), 0};
+
+    while (currentItemInStack >= 0)
+    {
+        ItemInStack current = stack[currentItemInStack--];
+        Item *item = current.ref;
+
+        handler(state, current.ref, current.level);
+
+        if (item->isOpen)
+        {
+            for (int c = item->childrenCount - 1; c >= 0; c--)
+                stack[++currentItemInStack] = (ItemInStack){GetChildAt(item, c), current.level + 1};
+        }
+    }
+}
+
+
+typedef void ForEachHandler(AppState *state, Item * item);
+inline void ForEachActualChild(AppState *state, Item *parent, ForEachHandler *handler)
+{
+    Item *stack[512] = {0};
+    int currentItemInStack = -1;
+
+    for (int c = parent->childrenCount - 1; c >= 0; c--)
+        stack[++currentItemInStack] = GetChildAt(parent, c);
+
+    while (currentItemInStack >= 0)
+    {
+        Item *item = stack[currentItemInStack--];
+
+        handler(state, item);
+
+        for (int c = item->childrenCount - 1; c >= 0; c--)
+            stack[++currentItemInStack] = GetChildAt(item, c);
+    }
+}
+
+
 i32 GetItemIndex(Item *item)
 {
     Item *parent = item->parent;
     for (int i = 0; i < parent->childrenCount; i++)
     {
-        if (parent->children + i == item)
+        if (GetChildAt(parent, i) == item)
             return i;
     }
     return -1;
@@ -16,7 +70,7 @@ Item *GetItemBelow(Item *item)
 {
     if (item->isOpen)
     {
-        return item->children;
+        return *item->children;
     }
     else
     {
@@ -24,14 +78,14 @@ Item *GetItemBelow(Item *item)
         i32 itemIndex = GetItemIndex(item);
         if (itemIndex < parent->childrenCount - 1)
         {
-            return parent->children + itemIndex + 1;
+            return GetChildAt(parent, itemIndex + 1);
         }
         else
         {
             while (parent->parent && GetItemIndex(parent) == parent->parent->childrenCount - 1 && parent->isOpen)
                 parent = parent->parent;
             if (parent->parent)
-                return parent->parent->children + GetItemIndex(parent) + 1;
+                return GetChildAt(parent->parent, GetItemIndex(parent) + 1);
         }
     }
     return 0;
@@ -43,41 +97,72 @@ Item* GetItemAbove(Item * item)
     i32 itemIndex = GetItemIndex(item);
     if(itemIndex == 0)
         return parent;
-    Item *prevItem = parent->children + itemIndex - 1;
+    Item *prevItem = GetChildAt(parent, itemIndex - 1);
     //looking for the most nested item
     while(prevItem->isOpen)
-        prevItem = prevItem->children + prevItem->childrenCount - 1;
+        prevItem = GetChildAt(prevItem, prevItem->childrenCount - 1);
     return prevItem;
 
     return 0;
 }
 
-void AssignChildren(Item *item, char **children, int childrenLen)
+void AssignChildren(Item *item, char **childrenTexts, int childrenLen)
 {
     item->childrenCount = childrenLen;
-    item->children = calloc(childrenLen, sizeof(Item));
+    Item **children = AllocateZeroedMemory(childrenLen, sizeof(Item*));
+    item->children =  children;
     item->isOpen = 1;
     for (int i = 0; i < childrenLen; i++)
     {
-        Item *child = item->children + i;
+        Item *child = AllocateZeroedMemory(1, sizeof(Item)); 
+        *(children + i) = child;
         child->parent = item;
 
-
-        char *text = *(children + i);
+        char *text = *(childrenTexts + i);
         i32 textLen = strlen(text) + 1;
         child->textBuffer.length = textLen;
         child->textBuffer.capacity = textLen * 2;
 
-        child->textBuffer.text = malloc(child->textBuffer.capacity);
+        child->textBuffer.text = AllocateMemory(child->textBuffer.capacity);
         CopyMemory(child->textBuffer.text, text, textLen + 1);
     }
 }
 
-// inline void MoveBytesForward(char *ptr, int length) {
-//     for (int i = length - 1; i > 0; i--) {
-//         ptr[i] = ptr[i - 1];
-//     }
-// }
+void FreeItem(AppState *state, Item *item)
+{
+    FreeMemory(item->textBuffer.text);
+    if(item->childrenCount > 0)
+        FreeMemory(item->children);
+    FreeMemory(item);
+}
+
+Item* RemoveItem(AppState *state, Item *item)
+{
+    // TODO: before commiting this I need to document what changes to the memory I'm making
+    // Moving Items around breaks parent links. I need to malloc individual Items and move references around
+    // Design a tests which whould emulate an extensive work with items and monitor how memory is being used
+
+    ForEachActualChild(state, item, FreeItem);
+    FreeItem(state, item);
+    
+    i32 index = GetItemIndex(item);
+    if(index < item->parent->childrenCount - 1)
+    {
+        memmove(item->parent->children + index, item->parent->children + index + 1, sizeof(Item*) * (item->parent->childrenCount - index));
+    }
+
+    item->parent->childrenCount--;
+
+    if(item->parent->childrenCount == 0)
+        return item->parent;
+    if(index > 0)
+        return GetChildAt(item->parent, index - 1);
+    else 
+        return GetChildAt(item->parent, index);
+}
+
+
+
 
 // void InsertCharAt(Item* item, i32 at, i32 ch){
 //     item->textBuffer.length += 1;
@@ -170,11 +255,11 @@ void InitRoot(Item * root){
 
     root->isOpen = 1;
     AssignChildren(root, items, ArrayLength(items));
-    AssignChildren(root->children + 3, asuraChildren, ArrayLength(asuraChildren));
-    AssignChildren((root->children + 3)->children, lostEdemItems, ArrayLength(lostEdemItems));
-    AssignChildren((root->children + 3)->children + 3, lostEdemItems, ArrayLength(lostEdemItems));
+    AssignChildren(*(root->children + 3), asuraChildren, ArrayLength(asuraChildren));
+    // AssignChildren(*(root->children + 3)->children, lostEdemItems, ArrayLength(lostEdemItems));
+    // AssignChildren(*(root->children + 3)->children + 3, lostEdemItems, ArrayLength(lostEdemItems));
 
-    Item *brooks = root->children + 4;
+    Item *brooks = *(root->children + 4);
     AssignChildren(brooks, quotes, ArrayLength(quotes));
     // brooks->isOpen = 0;
 

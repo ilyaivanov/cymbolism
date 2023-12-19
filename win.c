@@ -1,5 +1,6 @@
 #include <windows.h>
 #include "types.h"
+#include "memory.c"
 #include "performance.c"
 
 #include "win_utils.c"
@@ -54,6 +55,8 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
     HDC dc = GetDC(window);
 
     isRunning = 1;
+
+    ReportStartupMemory();
     while (isRunning)
     {
         Start(FrameTotal);
@@ -101,9 +104,10 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
 
         Stop(FrameTotal);
 
-        PrintFrameStats();
-            
+        // PrintFrameStats();
         ResetMetrics();
+        ReportMemoryChanges();
+
         //TODO: add proper FPS support. Be very carefull to collect input and react on the same frame when input hapenned
         Sleep(14);
     }

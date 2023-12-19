@@ -17,7 +17,7 @@ FileContent ReadMyFileImp(char* path)
 
     u32 fileSize = (u32)size.QuadPart;
 
-    void *buffer = VirtualAlloc(0, fileSize, MEM_COMMIT, PAGE_READWRITE);
+    void *buffer = VirtualAllocateMemory(fileSize);
 
     DWORD bytesRead;
     ReadFile(file, buffer, fileSize, &bytesRead, 0);
@@ -60,7 +60,7 @@ void OnResize(HWND window, BITMAPINFO *bitmapInfo, MyBitmap *bitmap)
 
     if (bitmap->pixels)
     {
-        VirtualFree(bitmap->pixels, 0, MEM_RELEASE);
+        VirtualFreeMemory(bitmap->pixels);
     }
 
     bitmap->width = rect.right - rect.left;
@@ -70,7 +70,7 @@ void OnResize(HWND window, BITMAPINFO *bitmapInfo, MyBitmap *bitmap)
     InitBitmapInfo(bitmapInfo, bitmap->width, bitmap->height);
 
     i32 size = bitmap->width * bitmap->height * bitmap->bytesPerPixel;
-    bitmap->pixels = VirtualAlloc(0, size, MEM_COMMIT, PAGE_READWRITE);
+    bitmap->pixels = VirtualAllocateMemory(size);
 }
 
 

@@ -17,7 +17,7 @@ inline void MoveBytesLeft(char *ptr, int length)
 void InitBuffer(StringBuffer *buffer, char* text, i32 sourceSize)
 {
     buffer->capacity = sourceSize * 2;
-    buffer->text = malloc(buffer->capacity);
+    buffer->text = AllocateMemory(buffer->capacity);
     i32 targetIndex = 0;
     for (int sourceIndex = 0; sourceIndex < sourceSize; sourceIndex++)
     {
@@ -38,9 +38,9 @@ void InsertCharAt(StringBuffer *buffer, i32 at, i32 ch)
     {
         char *currentStr = buffer->text;
         buffer->capacity *= 2;
-        buffer->text = malloc(buffer->capacity);
+        buffer->text = AllocateMemory(buffer->capacity);
         CopyMemory(buffer->text, currentStr, buffer->length);
-        free(currentStr);
+        FreeMemory(currentStr);
     }
 
     buffer->length += 1;

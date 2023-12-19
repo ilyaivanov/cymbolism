@@ -45,7 +45,7 @@ typedef struct StringBuffer
 typedef struct Item
 {
     struct Item *parent;
-    struct Item *children;
+    struct Item **children;
     i32 childrenCount;
     i32 isOpen;
     StringBuffer textBuffer;

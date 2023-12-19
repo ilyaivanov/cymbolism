@@ -66,38 +66,11 @@ void InitApp(AppState *state)
     
     InitFontSystem(&state->fonts.regular, FONT_SIZE, FONT_FAMILY);
     InitRoot(&state->root);
-    state->selectedItem = state->root.children;
+    state->selectedItem = GetChildAt(&state->root, 0);
 
     Stop(StartUp);
 
     PrintStartupResults();
-}
-
-typedef void ForEachHandler(AppState *state, Item * item, i32 level);
-
-//TODO: check macros if function call would be too slow
-//This will be moved inside UI model
-inline void ForEachVisibleChild(AppState *state, Item *parent, ForEachHandler *handler)
-{
-    ItemInStack stack[512] = {0};
-    int currentItemInStack = -1;
-
-    for (int c = parent->childrenCount - 1; c >= 0; c--)
-        stack[++currentItemInStack] = (ItemInStack){parent->children + c, 0};
-
-    while (currentItemInStack >= 0)
-    {
-        ItemInStack current = stack[currentItemInStack--];
-        Item *item = current.ref;
-
-        handler(state, current.ref, current.level);
-
-        if (item->isOpen)
-        {
-            for (int c = item->childrenCount - 1; c >= 0; c--)
-                stack[++currentItemInStack] = (ItemInStack){item->children + c, current.level + 1};
-        }
-    }
 }
 
 void UpdateLines(AppState *state, Item *item, i32 level)
@@ -135,6 +108,11 @@ inline void UpdatePageHeight(AppState *state)
 {
     state->pageHeight = 0;
     ForEachVisibleChild(state, &state->root, AppendPageHeight);
+    state->pageHeight += state->fonts.regular.textMetric.tmHeight * (LINE_HEIGHT);
+
+
+    if(state->pageHeight <= state->canvas.height)
+        state->yOffset = 0;
 }
 
 
@@ -151,38 +129,43 @@ inline void HandleInput(AppState *state, MyInput *input)
 
     if (state->editMode == EditorMode_Normal)
     {
-        if (input->keysPressed['L'])
+        if (input->keysPressed['L'] && input->isPressed[VK_CONTROL])
             MoveCursor(state, CursorMove_Right);
 
-        if (input->keysPressed['H'])
+        else if (input->keysPressed['H'] && input->isPressed[VK_CONTROL])
             MoveCursor(state, CursorMove_Left);
 
-        if (input->keysPressed['J'])
+        else if (input->keysPressed['J'] && input->isPressed[VK_CONTROL])
             MoveCursor(state, CursorMove_Down);
 
-        if (input->keysPressed['K'])
+        else if (input->keysPressed['K'] && input->isPressed[VK_CONTROL])
             MoveCursor(state, CursorMove_Up);
 
-        if (input->keysPressed['D'])
+        else if (input->keysPressed['J'])
             MoveSelectionBox(state, SelectionBox_Down);
 
-        if (input->keysPressed['F'])
+        else if (input->keysPressed['K'])
             MoveSelectionBox(state, SelectionBox_Up);
 
-        if (input->keysPressed['S'])
+        else if (input->keysPressed['H'])
         {
             if (MoveSelectionBox(state, SelectionBox_Left))
                 UpdatePageHeight(state);
         }
 
-        if (input->keysPressed['G'])
+        else if (input->keysPressed['L'])
         {
             if (MoveSelectionBox(state, SelectionBox_Right))
                 UpdatePageHeight(state);
         }
-        if (input->keysPressed['I'])
+        else if (input->keysPressed['I'])
         {
             state->editMode = EditorMode_Insert;
+        }
+        else if (input->keysPressed['D'])
+        {
+            state->selectedItem = RemoveItem(state, state->selectedItem);
+            UpdatePageHeight(state);
         }
     }
     else if (state->editMode == EditorMode_Insert)

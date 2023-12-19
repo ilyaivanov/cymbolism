@@ -51,7 +51,7 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
     Start(FontKerningTablesInitialization);
     i32 kerningPairCount = GetKerningPairsW(deviceContext, 0, 0);
     i32 pairsSizeAllocated = sizeof(KERNINGPAIR) * kerningPairCount;
-    KERNINGPAIR *pairs = malloc(pairsSizeAllocated);
+    KERNINGPAIR *pairs = AllocateMemory(pairsSizeAllocated);
     GetKerningPairsW(deviceContext, kerningPairCount, pairs);
 
     i32 hashSize = ArrayLength(fontData->pairsHash);
@@ -65,7 +65,7 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
         fontData->pairsHash[index].right = pair->wSecond;
         fontData->pairsHash[index].val = pair->iKernAmount;
     }
-    free(pairs);
+    FreeMemory(pairs);
     Stop(FontKerningTablesInitialization);
 
     SetBkColor(deviceContext, RGB(0, 0, 0));
@@ -88,7 +88,7 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
         texture->height = size.cy;
         texture->bytesPerPixel = 4;
 
-        texture->pixels = malloc(texture->height * texture->width * texture->bytesPerPixel);
+        texture->pixels = AllocateMemory(texture->height * texture->width * texture->bytesPerPixel);
         bytesAllocated += texture->height * texture->width * texture->bytesPerPixel;
 
         u32 *row = (u32 *)texture->pixels;

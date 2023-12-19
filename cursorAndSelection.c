@@ -11,6 +11,8 @@ typedef enum CursorMovement
     CursorMove_Left,
     CursorMove_Down,
     CursorMove_Up,
+    CursorMove_JumpOneWordForward,
+    CursorMove_JumpOneWordBackward,
 } CursorMovement;
 
 typedef enum SelectionBoxMovement
@@ -92,7 +94,7 @@ i32 MoveSelectionBox(AppState *state, SelectionBoxMovement movement)
             return 1;
         }
         else if (state->selectedItem->childrenCount > 0)
-            state->selectedItem = state->selectedItem->children;
+            state->selectedItem = GetChildAt(state->selectedItem, 0);
     }
     if (movement == SelectionBox_Left)
     {
