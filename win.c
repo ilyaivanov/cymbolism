@@ -37,7 +37,8 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
     }
     else if (message == WM_CHAR)
     {
-        input.charEventsThisFrame[input.charEventsThisFrameCount++] = wParam;
+        if(wParam != '\b' && wParam != '\n' && wParam != '\r')
+            input.charEventsThisFrame[input.charEventsThisFrameCount++] = wParam;
     }
 
     return DefWindowProc(window, message, wParam, lParam);

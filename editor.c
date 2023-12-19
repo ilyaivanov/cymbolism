@@ -7,7 +7,8 @@
 
 #define BACKGROUND_COLOR_GREY 0x18
 #define COLOR_APP_BACKGROUND 0x181818
-#define COLOR_SELECTION_BAR 0x2F2F2F
+#define COLOR_SELECTION_BAR_NORMAL_MODE 0x2F2F2F
+#define COLOR_SELECTION_BAR_INSERT_MODE 0x2F5F5F
 #define COLOR_SELECTED_ITEM 0xffffff
 #define COLOR_NORMAL_ITEM   0xdddddd
 
@@ -139,44 +140,70 @@ inline void UpdatePageHeight(AppState *state)
 
 inline void HandleInput(AppState *state, MyInput *input)
 {
-    if(state->canvas.width != state->lastWidthRenderedWith)
+    if (state->canvas.width != state->lastWidthRenderedWith)
     {
         OnAppResize(state);
         UpdatePageHeight(state);
         state->lastWidthRenderedWith = state->canvas.width;
     }
-
-    if(input->wheelDelta)
+    if (input->wheelDelta)
         ScrollBy(state, -input->wheelDelta);
 
-    if(input->keysPressed['L'])
-        MoveCursor(state, CursorMove_Right);
-
-    if(input->keysPressed['H'])
-        MoveCursor(state, CursorMove_Left);
-  
-    if(input->keysPressed['J'])
-        MoveCursor(state, CursorMove_Down);
-    
-    if(input->keysPressed['K'])
-        MoveCursor(state, CursorMove_Up);
-
-    if (input->keysPressed['D'])
-        MoveSelectionBox(state, SelectionBox_Down);
-
-    if (input->keysPressed['F'])
-        MoveSelectionBox(state, SelectionBox_Up);
-
-    if (input->keysPressed['S'])
+    if (state->editMode == EditorMode_Normal)
     {
-        if (MoveSelectionBox(state, SelectionBox_Left))
-            UpdatePageHeight(state);
+        if (input->keysPressed['L'])
+            MoveCursor(state, CursorMove_Right);
+
+        if (input->keysPressed['H'])
+            MoveCursor(state, CursorMove_Left);
+
+        if (input->keysPressed['J'])
+            MoveCursor(state, CursorMove_Down);
+
+        if (input->keysPressed['K'])
+            MoveCursor(state, CursorMove_Up);
+
+        if (input->keysPressed['D'])
+            MoveSelectionBox(state, SelectionBox_Down);
+
+        if (input->keysPressed['F'])
+            MoveSelectionBox(state, SelectionBox_Up);
+
+        if (input->keysPressed['S'])
+        {
+            if (MoveSelectionBox(state, SelectionBox_Left))
+                UpdatePageHeight(state);
+        }
+
+        if (input->keysPressed['G'])
+        {
+            if (MoveSelectionBox(state, SelectionBox_Right))
+                UpdatePageHeight(state);
+        }
+        if (input->keysPressed['I'])
+        {
+            state->editMode = EditorMode_Insert;
+        }
     }
-
-    if (input->keysPressed['G'])
+    else if (state->editMode == EditorMode_Insert)
     {
-        if (MoveSelectionBox(state, SelectionBox_Right))
-            UpdatePageHeight(state);
+        for (int i = 0; i < input->charEventsThisFrameCount; i++)
+        {
+            InsertCharAt(&state->selectedItem->textBuffer, state->cursorPos, input->charEventsThisFrame[i]);
+            state->cursorPos++;
+        }
+
+        if(input->keysPressed[VK_BACK] && state->cursorPos > 0)
+        {
+            RemoveCharAt(&state->selectedItem->textBuffer, state->cursorPos - 1);
+            state->cursorPos--;
+        }
+        // I don't need to update all items, but now I don't know x level of a selected item. 
+        // This will be solved once I introduce statefull UI model
+        ForEachVisibleChild(state, &state->root, UpdateLines);
+
+        if(input->keysPressed[VK_ESCAPE])
+            state->editMode = EditorMode_Normal;
     }
 }
 
@@ -190,7 +217,7 @@ void RenderItem(AppState *state, Item *item, i32 level)
     i32 isItemSelected = item == state->selectedItem;
     if (item == state->selectedItem)
     {
-        i32 selectionColor = COLOR_SELECTION_BAR;
+        i32 selectionColor = state->editMode == EditorMode_Insert ? COLOR_SELECTION_BAR_INSERT_MODE : COLOR_SELECTION_BAR_NORMAL_MODE;
         i32 rectY = state->runningY - lineHeightInPixels / 2;
         i32 rectHeight = (item->newLinesCount + (LINE_HEIGHT - 1)) * fontHeight;
 
@@ -225,7 +252,7 @@ void RenderItem(AppState *state, Item *item, i32 level)
         i32 lineLength = item->newLines[i] - item->newLines[i - 1];
         DrawTextLeftCenter(&state->canvas, font, textX, textY, text, lineLength, textColor);
 
-        if (state->isCursorVisible && item == state->selectedItem && state->cursorPos >= item->newLines[i - 1] && state->cursorPos < item->newLines[i])
+        if ((state->isCursorVisible || state->editMode == EditorMode_Insert) && item == state->selectedItem && state->cursorPos >= item->newLines[i - 1] && state->cursorPos < item->newLines[i])
         {
             i32 cursorPosOnLine = state->cursorPos - item->newLines[i - 1];
             DrawRect(&state->canvas, textX + GetTextWidth(font, text, cursorPosOnLine), textY - fontHeight / 2, 1, fontHeight, 0xffffff);
@@ -254,4 +281,19 @@ void UpdateAndDrawApp(AppState *state, MyInput *input)
         i32 scrollWidth = 15;
         DrawRect(&state->canvas, state->canvas.width - scrollWidth, scrollY, scrollWidth, scrollHeight, 0x552D2E);
     }
+
+
+
+    // Drawing status bar at the bottom
+    FontData *font = &state->fonts.regular;
+    i32 labelsC = 0x888888;
+    i32 padding = 10;
+    char *label = state->editMode == EditorMode_Normal ? "Normal" : "Insert";
+    DrawTextLeftBottom(&state->canvas, font, padding, state->canvas.height - padding, label, strlen(label), labelsC);
+    
+    
+    // char *savedLabel = state->isFileSaved ? "Saved" : "Modified";
+    // DrawTextCenterBottom(&state->canvas, font, state->canvas.width / 2, state->canvas.height - padding, savedLabel, strlen(savedLabel), labelsC);
 }
+
+
