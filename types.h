@@ -75,7 +75,7 @@ typedef struct FontKerningPair
     u16 left;
     u16 right;
     i8 val;
-}FontKerningPair;
+} FontKerningPair;
 
 typedef struct FontData 
 {
@@ -106,14 +106,20 @@ typedef struct AppState
     Item root;
     Item *selectedItem;
     Fonts fonts;
+
+    // used to detect screen width changes in the render function without OnResize event
+    u32 lastWidthRenderedWith;
+
     MyBitmap canvas;
     EditorMode editMode;
 
-    // TODO: this will be moved in to the model. Currently I'm relying on the height from the prev frame
-    i32 pageHeight;
     i32 yOffset;
     i32 cursorPos;
+    i32 isCursorVisible;
     i32 isFileSaved;
+
+    // TODO: this will be moved in to the model. Currently I'm relying on the height from the prev frame
+    i32 pageHeight;
 
     //used when rendering items as "closures"
     i32 runningX;

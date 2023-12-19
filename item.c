@@ -1,5 +1,57 @@
 #include "types.h"
 
+i32 GetItemIndex(Item *item)
+{
+    Item *parent = item->parent;
+    for (int i = 0; i < parent->childrenCount; i++)
+    {
+        if (parent->children + i == item)
+            return i;
+    }
+    return -1;
+}
+
+
+Item *GetItemBelow(Item *item)
+{
+    if (item->isOpen)
+    {
+        return item->children;
+    }
+    else
+    {
+        Item *parent = item->parent;
+        i32 itemIndex = GetItemIndex(item);
+        if (itemIndex < parent->childrenCount - 1)
+        {
+            return parent->children + itemIndex + 1;
+        }
+        else
+        {
+            while (parent->parent && GetItemIndex(parent) == parent->parent->childrenCount - 1 && parent->isOpen)
+                parent = parent->parent;
+            if (parent->parent)
+                return parent->parent->children + GetItemIndex(parent) + 1;
+        }
+    }
+    return 0;
+}
+
+Item* GetItemAbove(Item * item)
+{
+    Item *parent = item->parent;
+    i32 itemIndex = GetItemIndex(item);
+    if(itemIndex == 0)
+        return parent;
+    Item *prevItem = parent->children + itemIndex - 1;
+    //looking for the most nested item
+    while(prevItem->isOpen)
+        prevItem = prevItem->children + prevItem->childrenCount - 1;
+    return prevItem;
+
+    return 0;
+}
+
 void AssignChildren(Item *item, char **children, int childrenLen)
 {
     item->childrenCount = childrenLen;
@@ -49,9 +101,6 @@ void InitRoot(Item * root){
         "I Awake",
         "James Murray",
         "Fred Brooks",
-        "Good judgement comes from experience, and experience comes from bad judgement.",
-        "The programmer, like the poet, works only slightly removed from pure thought-stuff. He builds his castles in the air, from air, creating by exertion of the imagination. Few media of creation are so flexible, so easy to polish and rework, so readily capable of realizing grand conceptual structures.",
-        "Adding manpower to a late software project, makes it later.",
         "Miktek",
         "Koan",
         "Zero Cult",
@@ -125,6 +174,10 @@ void InitRoot(Item * root){
     AssignChildren((root->children + 3)->children, lostEdemItems, ArrayLength(lostEdemItems));
     AssignChildren((root->children + 3)->children + 3, lostEdemItems, ArrayLength(lostEdemItems));
 
-    for (int i = 0; i < 8; i++)
-        AssignChildren(root->children + 4 + i, quotes, ArrayLength(quotes));
+    Item *brooks = root->children + 4;
+    AssignChildren(brooks, quotes, ArrayLength(quotes));
+    // brooks->isOpen = 0;
+
+    // for (int i = 0; i < 8; i++)
+    //     AssignChildren(root->children + 4 + i, quotes, ArrayLength(quotes));
 }
