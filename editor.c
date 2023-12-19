@@ -130,7 +130,7 @@ void AppendPageHeight(AppState *state, Item *item, i32 level)
     }
 }
 
-inline void UpdateModel(AppState *state)
+inline void UpdatePageHeight(AppState *state)
 {
     state->pageHeight = 0;
     ForEachVisibleChild(state, &state->root, AppendPageHeight);
@@ -142,7 +142,7 @@ inline void HandleInput(AppState *state, MyInput *input)
     if(state->canvas.width != state->lastWidthRenderedWith)
     {
         OnAppResize(state);
-        UpdateModel(state);
+        UpdatePageHeight(state);
         state->lastWidthRenderedWith = state->canvas.width;
     }
 
@@ -170,13 +170,13 @@ inline void HandleInput(AppState *state, MyInput *input)
     if (input->keysPressed['S'])
     {
         if (MoveSelectionBox(state, SelectionBox_Left))
-            UpdateModel(state);
+            UpdatePageHeight(state);
     }
 
     if (input->keysPressed['G'])
     {
         if (MoveSelectionBox(state, SelectionBox_Right))
-            UpdateModel(state);
+            UpdatePageHeight(state);
     }
 }
 
