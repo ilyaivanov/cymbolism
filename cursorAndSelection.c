@@ -3,7 +3,7 @@
 // Cursor handles movement inside the Item unable to go outside of the item bounds for now
 // Selection box handles a higher level movement throught the item tree structure 
 
-#define CLAMP_CURSOR(val) (ClampI32((val), 0, state->selectedItem->textBuffer.length - 1))
+#define CLAMP_CURSOR(val) (ClampI32((val), 0, state->selectedItem->textBuffer.length))
 
 typedef enum CursorMovement
 {
@@ -88,12 +88,12 @@ i32 MoveSelectionBox(AppState *state, SelectionBoxMovement movement)
 
     if (movement == SelectionBox_Right)
     {
-        if (!state->selectedItem->isOpen && state->selectedItem->childrenCount > 0)
+        if (!state->selectedItem->isOpen && ChildCount(state->selectedItem) > 0)
         {
             state->selectedItem->isOpen = 1;
             return 1;
         }
-        else if (state->selectedItem->childrenCount > 0)
+        else if (ChildCount(state->selectedItem) > 0)
             state->selectedItem = GetChildAt(state->selectedItem, 0);
     }
     if (movement == SelectionBox_Left)

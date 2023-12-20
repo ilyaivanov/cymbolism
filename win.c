@@ -38,7 +38,7 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
     }
     else if (message == WM_CHAR)
     {
-        if(wParam != '\b' && wParam != '\n' && wParam != '\r')
+        if(wParam > 31)
             input.charEventsThisFrame[input.charEventsThisFrameCount++] = wParam;
     }
 
@@ -93,7 +93,7 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
                 }
 
                 // prevent OS handling keys like ALT + J
-                if(msg.wParam != VK_F4)
+                if(!(msg.wParam == VK_F4 && input.isPressed[VK_MENU] || state.editMode == EditorMode_Insert))
                     continue;
             }
             TranslateMessage(&msg);

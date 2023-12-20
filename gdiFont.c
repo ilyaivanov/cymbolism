@@ -140,21 +140,17 @@ inline i32 GetTextWidth(FontData *font, char *text, i32 len)
 
 inline void DrawTextLeftTop(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char *text, i32 len, i32 color)
 {
-    char ch = *text;
     for (int i = 0; i < len; i += 1)
     {
-        char codepoint = *text;
-        Start(FramePrintTextDrawTexture);
+        char codepoint = *(text + i);
+
         MyBitmap *glyphBitmap = GetGlyphBitmap(font, codepoint);
         DrawTextureTopLeft(bitmap, glyphBitmap, x, y, color);
-        Stop(FramePrintTextDrawTexture);
 
-        char nextCodepoint = *(text + 1);
+        char nextCodepoint = *(text + i + 1);
         
         x += glyphBitmap->width + GetKerningValue(font, codepoint, nextCodepoint);
-        text++;
     }
-
 }
 
 inline void DrawTextLeftBottom(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char *text, i32 len, i32 color)

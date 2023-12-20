@@ -13,7 +13,6 @@ inline void MoveBytesLeft(char *ptr, int length)
     }
 }
 
-//TODO: need to extract this filtering code away from here
 void InitBuffer(StringBuffer *buffer, char* text, i32 sourceSize)
 {
     buffer->capacity = sourceSize * 2;
@@ -22,14 +21,15 @@ void InitBuffer(StringBuffer *buffer, char* text, i32 sourceSize)
     for (int sourceIndex = 0; sourceIndex < sourceSize; sourceIndex++)
     {
         char ch = *(text + sourceIndex);
-        if (ch != '\r')
+
+        //TODO: need to figure this out on the parsing phase
+        if(ch != '\r' && ch != '\n' && ch != '\0')
         {
             *(buffer->text + targetIndex) = ch;
             targetIndex++;
         }
     }
     buffer->length = targetIndex;
-    // CopyMemory(buffer->text, text, buffer->length);
 }
 
 void InsertCharAt(StringBuffer *buffer, i32 at, i32 ch)
@@ -39,7 +39,7 @@ void InsertCharAt(StringBuffer *buffer, i32 at, i32 ch)
         char *currentStr = buffer->text;
         buffer->capacity *= 2;
         buffer->text = AllocateMemory(buffer->capacity);
-        CopyMemory(buffer->text, currentStr, buffer->length);
+        MoveMemory(buffer->text, currentStr, buffer->length);
         FreeMemory(currentStr);
     }
 

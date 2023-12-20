@@ -42,11 +42,19 @@ typedef struct StringBuffer
     i32 length;
 } StringBuffer;
 
+typedef struct ItemChildrenBuffer
+{
+    struct Item **children;
+    i32 capacity;
+    i32 length;
+} ItemChildrenBuffer;
+
 typedef struct Item
 {
     struct Item *parent;
-    struct Item **children;
-    i32 childrenCount;
+
+    ItemChildrenBuffer childrenBuffer;
+
     i32 isOpen;
     StringBuffer textBuffer;
 
