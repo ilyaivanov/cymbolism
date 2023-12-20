@@ -168,6 +168,12 @@ inline void DrawTextCenterBottom(MyBitmap *bitmap, FontData *font, i32 x, i32 y,
     DrawTextLeftBottom(bitmap, font, x - textWidth / 2, y, text, len, color);
 }
 
+inline void DrawTextRightBottom(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char *text, i32 len, i32 color)
+{
+    i32 textWidth = GetTextWidth(font, text, len);
+    DrawTextLeftBottom(bitmap, font, x - textWidth, y, text, len, color);
+}
+
 inline void DrawTextLeftCenter(MyBitmap *bitmap, FontData *font, i32 x, i32 y, char *text, i32 len, i32 color)
 {
     DrawTextLeftTop(bitmap, font, x, y - font->textMetric.tmHeight / 2, text, len, color);

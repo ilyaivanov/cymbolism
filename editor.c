@@ -7,6 +7,7 @@
 
 #define BACKGROUND_COLOR_GREY 0x18
 #define COLOR_APP_BACKGROUND 0x181818
+#define COLOR_MENU_BACKGROUND 0x262626
 #define COLOR_SELECTION_BAR_NORMAL_MODE 0x2F2F2F
 #define COLOR_SELECTION_BAR_INSERT_MODE 0x2F5F5F
 #define COLOR_SELECTED_ITEM 0xffffff
@@ -19,6 +20,7 @@
 #define LEVEL_STEP 40
 #define LINE_HEIGHT 1.2f
 #define PAGE_PADDING 30
+#define BOTTOM_PADDING 50
 
 
 void SplitTextIntoLines(Item *item, FontData *font, u32 maxWidth)
@@ -84,9 +86,24 @@ void OnAppResize(AppState *state)
     ForEachVisibleChild(state, &state->root, UpdateLines);
 }
 
+inline void ScrollTo(AppState *state, i32 val)
+{
+    state->yOffset = ClampI32(val, 0, state->pageHeight - state->canvas.height);
+}
+
 inline void ScrollBy(AppState *state, i32 delta)
 {
-    state->yOffset = ClampI32(state->yOffset + delta, 0, state->pageHeight - state->canvas.height);
+    ScrollTo(state, state->yOffset + delta);
+}
+
+inline void CheckScrollOffset(AppState * state, i32 rectRunningY, i32 rectHeight)
+{
+    i32 rectAbsolutePos = rectRunningY + state->yOffset;
+    i32 rectAbsoluteBottom = rectAbsolutePos + rectHeight;
+    if(rectAbsoluteBottom > state->yOffset + state->canvas.height - 60)
+        ScrollTo(state, rectAbsoluteBottom - state->canvas.height + 60);
+    else if (rectAbsolutePos < state->yOffset + 60)
+        ScrollTo(state, rectAbsolutePos - 60);
 }
 
 
@@ -113,6 +130,8 @@ inline void UpdatePageHeight(AppState *state)
 
     if(state->pageHeight <= state->canvas.height)
         state->yOffset = 0;
+
+    state->pageHeight += BOTTOM_PADDING;
 }
 
 
@@ -140,6 +159,12 @@ inline void HandleInput(AppState *state, MyInput *input)
 
         else if (input->keysPressed['K'] && input->isPressed[VK_CONTROL])
             MoveCursor(state, CursorMove_Up);
+
+        else if (input->keysPressed['J'] && input->isPressed[VK_MENU])
+            MoveItemDown(state, state->selectedItem);
+        
+        else if (input->keysPressed['K'] && input->isPressed[VK_MENU])
+            MoveItemUp(state, state->selectedItem);
 
         else if (input->keysPressed['J'])
             MoveSelectionBox(state, SelectionBox_Down);
@@ -189,7 +214,6 @@ inline void HandleInput(AppState *state, MyInput *input)
             state->editMode = EditorMode_Normal;
     }
 }
-
 void RenderItem(AppState *state, Item *item, i32 level)
 {
     FontData *font = &state->fonts.regular;
@@ -204,14 +228,8 @@ void RenderItem(AppState *state, Item *item, i32 level)
         i32 rectY = state->runningY - lineHeightInPixels / 2;
         i32 rectHeight = (item->newLinesCount + (LINE_HEIGHT - 1)) * fontHeight;
 
-        // TODO: ugly change of offsets, will take place only in the next frame
         if (state->pageHeight > state->canvas.height)
-        {
-            if (rectY < 50)
-                ScrollBy(state, rectY - 50);
-            if (rectY + rectHeight > state->canvas.height - 50)
-                ScrollBy(state, rectHeight);
-        }
+            CheckScrollOffset(state, rectY, rectHeight);
 
         DrawRect(&state->canvas, 0, rectY, state->canvas.width, rectHeight, selectionColor);
     }
@@ -229,7 +247,6 @@ void RenderItem(AppState *state, Item *item, i32 level)
     Start(FramePrintText);
     for (int i = 1; i <= item->newLinesCount; i++)
     {
-        
         i32 textY = state->runningY - FONT_SIZE / 10 - 1;
         char *text = item->textBuffer.text + (item->newLines[i - 1] == 0 ? item->newLines[i - 1] : item->newLines[i - 1] + 1);
         i32 lineLength = item->newLines[i] - item->newLines[i - 1];
@@ -271,12 +288,19 @@ void UpdateAndDrawApp(AppState *state, MyInput *input)
     FontData *font = &state->fonts.regular;
     i32 labelsC = 0x888888;
     i32 padding = 10;
+
+    i32 r = font->textMetric.tmHeight + padding * 1.3;
+    DrawRect(&state->canvas, 0, state->canvas.height - r, state->canvas.width, r, COLOR_MENU_BACKGROUND);
+    
     char *label = state->editMode == EditorMode_Normal ? "Normal" : "Insert";
     DrawTextLeftBottom(&state->canvas, font, padding, state->canvas.height - padding, label, strlen(label), labelsC);
     
     
-    // char *savedLabel = state->isFileSaved ? "Saved" : "Modified";
-    // DrawTextCenterBottom(&state->canvas, font, state->canvas.width / 2, state->canvas.height - padding, savedLabel, strlen(savedLabel), labelsC);
+    char buff[256];
+    sprintf(buff, "%d offset | %d page | %d screen",
+            state->yOffset, state->pageHeight, state->canvas.height);
+
+    DrawTextRightBottom(&state->canvas, font, state->canvas.width - padding, state->canvas.height - padding, &buff[0], strlen(&buff[0]), labelsC);
 }
 
 

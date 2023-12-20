@@ -6,6 +6,10 @@ inline Item* GetChildAt(Item *parent, i32 index)
 {
     return *(parent->children + index);
 }
+inline void SetChildAt(Item *parent, i32 index, Item *child)
+{
+     *(parent->children + index) = child;
+}
 
 //TODO: check macros if function call would be too slow
 //This will be moved inside UI model
@@ -157,7 +161,29 @@ Item* RemoveItem(AppState *state, Item *item)
         return GetChildAt(item->parent, index);
 }
 
+void MoveItemDown(AppState *state, Item *item)
+{
+    Item *parent = item->parent;
+    i32 index = GetItemIndex(item);
+    if(index < parent->childrenCount - 1)
+    {
+        Item *temp = GetChildAt(parent, index + 1);
+        SetChildAt(parent, index + 1, item);
+        SetChildAt(parent, index, temp);
+    }
+}
 
+void MoveItemUp(AppState *state, Item *item)
+{
+    Item *parent = item->parent;
+    i32 index = GetItemIndex(item);
+    if(index > 0)
+    {
+        Item *temp = GetChildAt(parent, index - 1);
+        SetChildAt(parent, index - 1, item);
+        SetChildAt(parent, index, temp);
+    }
+}
 
 
 // void InsertCharAt(Item* item, i32 at, i32 ch){
