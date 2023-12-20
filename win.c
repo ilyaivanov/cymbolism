@@ -68,11 +68,11 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
         MSG msg;
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
         {
-            if (msg.message == WM_KEYDOWN)
+            if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN)
             {
                 input.isPressed[msg.wParam] = 1;
             }
-            if (msg.message == WM_KEYUP)
+            if (msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP)
             {
                 input.isPressed[msg.wParam] = 0;
             }
@@ -80,7 +80,7 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
             {
                 input.wheelDelta = GET_WHEEL_DELTA_WPARAM(msg.wParam);
             }
-            if (msg.message == WM_KEYDOWN)
+            if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN)
             {
                 if (msg.wParam == VK_F11)
                 {
@@ -91,6 +91,10 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
                 {
                     input.keysPressed[msg.wParam] = 1;
                 }
+
+                // prevent OS handling keys like ALT + J
+                if(msg.wParam != VK_F4)
+                    continue;
             }
             TranslateMessage(&msg);
             DispatchMessage(&msg);
@@ -104,7 +108,7 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
 
         Stop(FrameTotal);
 
-        // PrintFrameStats();
+        PrintFrameStats();
         ResetMetrics();
         ReportMemoryChanges();
 
