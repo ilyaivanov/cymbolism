@@ -88,14 +88,13 @@ inline void *VirtualAllocateMemory(i32 size)
 #ifdef IS_TRACKING_MEMORY
     Track(size, MemoryAllocated);
 
-    size_t* res = VirtualAlloc(0, size, MEM_COMMIT, PAGE_READWRITE);
+    size_t* res = VirtualAlloc(0, size + 1, MEM_COMMIT, PAGE_READWRITE);
     *res = size;
     return res + 1;
 #else
-     VirtualAlloc(0, size, MEM_COMMIT, PAGE_READWRITE);
+     return VirtualAlloc(0, size, MEM_COMMIT, PAGE_READWRITE);
 #endif
 };
-
 
 inline void ClearFrameData()
 {
