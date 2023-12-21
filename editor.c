@@ -362,6 +362,7 @@ void RenderItem(AppState *state, Item *item, i32 level)
     Start(FramePrintText);
     for (int i = 1; i <= item->newLinesCount; i++)
     {
+        // 'FONT_SIZE / 10 - 1' is picked by hand judging purely by eye, without this text seems off
         i32 textY = state->runningY - FONT_SIZE / 10 - 1;
         char *text = item->textBuffer.text + (item->newLines[i - 1] == 0 ? item->newLines[i - 1] : item->newLines[i - 1] + 1);
         i32 lineLength = item->newLines[i] - item->newLines[i - 1];
