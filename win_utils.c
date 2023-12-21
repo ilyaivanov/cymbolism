@@ -53,18 +53,13 @@ void InitBitmapInfo(BITMAPINFO * bitmapInfo, u32 width, u32 height)
     bitmapInfo->bmiHeader.biCompression = BI_RGB;
 }
 
-void OnResize(HWND window, BITMAPINFO *bitmapInfo, MyBitmap *bitmap)
+void OnResize(BITMAPINFO *bitmapInfo, MyBitmap *bitmap, u32 width, u32 height)
 {
-    RECT rect;
-    GetClientRect(window, &rect);
-
     if (bitmap->pixels)
-    {
         VirtualFreeMemory(bitmap->pixels);
-    }
 
-    bitmap->width = rect.right - rect.left;
-    bitmap->height = rect.bottom - rect.top;
+    bitmap->width = width;
+    bitmap->height = height;
     bitmap->bytesPerPixel = 4;
 
     InitBitmapInfo(bitmapInfo, bitmap->width, bitmap->height);

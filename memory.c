@@ -70,6 +70,19 @@ inline void FreeMemory(void * ptr)
 #endif
 };
 
+inline void *VirtualAllocateMemory(size_t size)
+{
+#ifdef IS_TRACKING_MEMORY
+    Track(size, MemoryAllocated);
+
+    size_t* res = VirtualAlloc(0, size + 1, MEM_COMMIT, PAGE_READWRITE);
+    *res = size;
+    return res + 1;
+#else
+     return VirtualAlloc(0, size, MEM_COMMIT, PAGE_READWRITE);
+#endif
+};
+
 inline void VirtualFreeMemory(void * ptr)
 {
 #ifdef IS_TRACKING_MEMORY
@@ -83,18 +96,7 @@ inline void VirtualFreeMemory(void * ptr)
 #endif
 };
 
-inline void *VirtualAllocateMemory(i32 size)
-{
-#ifdef IS_TRACKING_MEMORY
-    Track(size, MemoryAllocated);
 
-    size_t* res = VirtualAlloc(0, size + 1, MEM_COMMIT, PAGE_READWRITE);
-    *res = size;
-    return res + 1;
-#else
-     return VirtualAlloc(0, size, MEM_COMMIT, PAGE_READWRITE);
-#endif
-};
 
 inline void ClearFrameData()
 {

@@ -24,10 +24,18 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
     }
     else if (message == WM_SIZE)
     {
-        OnResize(window, &bitmapInfo, &state.canvas);
-        // This fails for my metrics for first frame, need to think how to resolve this
-        memset(state.canvas.pixels, BACKGROUND_COLOR_GREY, state.canvas.height * state.canvas.width * state.canvas.bytesPerPixel);
-        UpdateAndDrawApp(&state, &input);
+        if(wParam != SIZE_MINIMIZED)
+        {
+            UINT width = LOWORD(lParam);
+            UINT height = HIWORD(lParam);
+            OnResize(&bitmapInfo, &state.canvas, width, height);
+
+            // This fails for my metrics for first frame, need to think how to resolve this
+            memset(state.canvas.pixels, BACKGROUND_COLOR_GREY, state.canvas.height * state.canvas.width * state.canvas.bytesPerPixel);
+            UpdateAndDrawApp(&state, &input);
+            ReportMemoryChanges();
+        }
+        return 0;
     }
     else if (message == WM_PAINT)
     {
