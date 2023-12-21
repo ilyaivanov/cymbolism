@@ -221,6 +221,18 @@ inline void HandleInput(AppState *state, MyInput *input)
             MakrFileUnsaved(state);
         }
 
+        else if (input->keysPressed['H'] && input->isPressed[VK_MENU])
+        {
+            MoveItemLeft(state, state->selectedItem);
+            MakrFileUnsaved(state);
+        }
+
+        else if (input->keysPressed['L'] && input->isPressed[VK_MENU])
+        {
+            MoveItemRight(state, state->selectedItem);
+            MakrFileUnsaved(state);
+        }
+
         else if (input->keysPressed['J'])
             MoveSelectionBox(state, SelectionBox_Down);
 
@@ -251,16 +263,25 @@ inline void HandleInput(AppState *state, MyInput *input)
         }
         else if (input->keysPressed['O'])
         {
-            i32 currentIndex = GetItemIndex(state->selectedItem);
-            i32 targetIndex = input->isPressed[VK_SHIFT] ? currentIndex + 1 : currentIndex;
-
             Item *item = AllocateZeroedMemory(1, sizeof(Item));
             InitEmptyBufferWithCapacity(&item->textBuffer, 10);
-            InsertChildAt(state->selectedItem->parent, item, targetIndex);
+            i32 currentIndex = GetItemIndex(state->selectedItem);
+
+            if(input->isPressed[VK_CONTROL])
+            {
+                InitChildrenIfEmptyWithDefaultCapacity(state->selectedItem);
+                InsertChildAt(state->selectedItem, item, 0);
+                state->selectedItem->isOpen = 1;
+            }
+            else 
+            {
+                i32 targetIndex = input->isPressed[VK_SHIFT] ? currentIndex + 1 : currentIndex;
+                InsertChildAt(state->selectedItem->parent, item, targetIndex);
+            }
             state->selectedItem = item;
+            state->cursorPos = 0;
             state->editMode = EditorMode_Insert;
             state->isCursorVisible = 1;
-
             OnAppResize(state);
             UpdatePageHeight(state);
             MakrFileUnsaved(state);

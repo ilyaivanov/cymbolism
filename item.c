@@ -1,13 +1,23 @@
 #include "types.h"
 
+#define isRoot(item) (!item->parent)
+
 //
 // Growable children list
 //
-void InitChildren(Item* parent, i32 capacity)
+
+
+inline void InitChildren(Item* parent, i32 capacity)
 {
     parent->childrenBuffer.length = 0;
     parent->childrenBuffer.capacity = capacity;
     parent->childrenBuffer.children = AllocateZeroedMemory(capacity, sizeof(Item*));
+}
+
+inline void InitChildrenIfEmptyWithDefaultCapacity(Item *item)
+{
+    if (ChildCount(item) == 0)
+        InitChildren(item, 4);
 }
 
 void ExpandBufferIfFull(Item* item)
@@ -44,7 +54,7 @@ void InsertChildAt(Item* parent, Item* child, i32 index)
     buffer->length++;
 }
 
-i32 RemoveChildFromParent(Item* child)
+inline i32 RemoveChildFromParent(Item* child)
 {
     i32 index = GetItemIndex(child);
     if(index < ChildCount(child->parent) - 1)
@@ -178,9 +188,9 @@ Item *GetItemBelow(Item *item)
         }
         else
         {
-            while (parent->parent && GetItemIndex(parent) == ChildCount(parent->parent) - 1 && parent->isOpen)
+            while (!isRoot(parent) && GetItemIndex(parent) == ChildCount(parent->parent) - 1 && parent->isOpen)
                 parent = parent->parent;
-            if (parent->parent)
+            if (!isRoot(parent))
                 return GetChildAt(parent->parent, GetItemIndex(parent) + 1);
         }
     }
@@ -250,6 +260,34 @@ void MoveItemUp(AppState *state, Item *item)
         SetChildAt(parent, index, temp);
     }
 }
+
+void MoveItemRight(AppState *state, Item *item)
+{
+    i32 index = GetItemIndex(item);
+    if(index > 0)
+    {
+        Item *prevItem = GetChildAt(item->parent, index - 1);
+        
+        RemoveChildFromParent(item);
+        InitChildrenIfEmptyWithDefaultCapacity(prevItem);
+        AppendChild(prevItem, item);
+
+        prevItem->isOpen = 1;
+    }
+}
+
+void MoveItemLeft(AppState *state, Item *item)
+{
+    Item *parent = item->parent;
+
+    if(isRoot(parent))
+        return;
+    
+    i32 parentIndex = GetItemIndex(parent);
+    RemoveChildFromParent(item);
+    InsertChildAt(parent->parent, item, parentIndex + 1);
+}
+
 
 typedef struct ItemEntry { i32 start, end, level; Item *item; } ItemEntry;
 
