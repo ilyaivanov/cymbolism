@@ -1,6 +1,6 @@
 #include "types.h"
 
-#define isRoot(item) (!item->parent)
+#define IsRoot(item) (!item->parent)
 
 //
 // Growable children list
@@ -66,6 +66,10 @@ inline i32 RemoveChildFromParent(Item* child)
     }    
 
     child->parent->childrenBuffer.length--;
+    if(ChildCount(child->parent) == 0)
+        child->parent->isOpen = 0;
+        
+    child->parent = 0;
     return index;
 }
 
@@ -168,10 +172,6 @@ inline void ForEachActualChildLeveled(AppState *state, Item *parent, ForEachLeve
     }
 }
 
-
-
-
-
 Item *GetItemBelow(Item *item)
 {
     if (item->isOpen)
@@ -188,9 +188,9 @@ Item *GetItemBelow(Item *item)
         }
         else
         {
-            while (!isRoot(parent) && GetItemIndex(parent) == ChildCount(parent->parent) - 1 && parent->isOpen)
+            while (!IsRoot(parent) && GetItemIndex(parent) == ChildCount(parent->parent) - 1 && parent->isOpen)
                 parent = parent->parent;
-            if (!isRoot(parent))
+            if (!IsRoot(parent))
                 return GetChildAt(parent->parent, GetItemIndex(parent) + 1);
         }
     }
@@ -280,7 +280,7 @@ void MoveItemLeft(AppState *state, Item *item)
 {
     Item *parent = item->parent;
 
-    if(isRoot(parent))
+    if(IsRoot(parent))
         return;
     
     i32 parentIndex = GetItemIndex(parent);
