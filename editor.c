@@ -116,7 +116,7 @@ void SaveState(AppState *state)
     state->isFileSaved = 1;
 }
 
-inline void OnChanges(AppState *state)
+inline void MakrFileUnsaved(AppState *state)
 {
     state->isFileSaved = 0;
 }
@@ -212,13 +212,13 @@ inline void HandleInput(AppState *state, MyInput *input)
         else if (input->keysPressed['J'] && input->isPressed[VK_MENU])
         {
             MoveItemDown(state, state->selectedItem);
-            OnChanges(state);
+            MakrFileUnsaved(state);
         }
 
         else if (input->keysPressed['K'] && input->isPressed[VK_MENU])
         {
             MoveItemUp(state, state->selectedItem);
-            OnChanges(state);
+            MakrFileUnsaved(state);
         }
 
         else if (input->keysPressed['J'])
@@ -241,12 +241,29 @@ inline void HandleInput(AppState *state, MyInput *input)
         else if (input->keysPressed['I'])
         {
             state->editMode = EditorMode_Insert;
+            state->isCursorVisible = 1;
         }
         else if (input->keysPressed['D'])
         {
             state->selectedItem = RemoveItem(state, state->selectedItem);
             UpdatePageHeight(state);
-            OnChanges(state);
+            MakrFileUnsaved(state);
+        }
+        else if (input->keysPressed['O'])
+        {
+            i32 currentIndex = GetItemIndex(state->selectedItem);
+            i32 targetIndex = input->isPressed[VK_SHIFT] ? currentIndex + 1 : currentIndex;
+
+            Item *item = AllocateZeroedMemory(1, sizeof(Item));
+            InitEmptyBufferWithCapacity(&item->textBuffer, 10);
+            InsertChildAt(state->selectedItem->parent, item, targetIndex);
+            state->selectedItem = item;
+            state->editMode = EditorMode_Insert;
+            state->isCursorVisible = 1;
+
+            OnAppResize(state);
+            UpdatePageHeight(state);
+            MakrFileUnsaved(state);
         }
     }
     else if (state->editMode == EditorMode_Insert)
@@ -255,20 +272,20 @@ inline void HandleInput(AppState *state, MyInput *input)
         {
             InsertCharAt(&state->selectedItem->textBuffer, state->cursorPos, input->charEventsThisFrame[i]);
             state->cursorPos++;
-            OnChanges(state);
+            MakrFileUnsaved(state);
         }
 
         if(input->keysPressed[VK_BACK] && state->cursorPos > 0)
         {
             RemoveCharAt(&state->selectedItem->textBuffer, state->cursorPos - 1);
             state->cursorPos--;
-            OnChanges(state);
+            MakrFileUnsaved(state);
         }
         // I don't need to update all items, but now I don't know x level of a selected item. 
         // This will be solved once I introduce statefull UI model
         ForEachVisibleChild(state, &state->root, UpdateLines);
 
-        if(input->keysPressed[VK_ESCAPE])
+        if(input->keysPressed[VK_ESCAPE] || input->keysPressed[VK_RETURN])
             state->editMode = EditorMode_Normal;
     }
 }

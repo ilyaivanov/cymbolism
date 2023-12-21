@@ -10,9 +10,9 @@ void InitChildren(Item* parent, i32 capacity)
     parent->childrenBuffer.children = AllocateZeroedMemory(capacity, sizeof(Item*));
 }
 
-void AppendChild(Item* parent, Item* child)
+void ExpandBufferIfFull(Item* item)
 {
-    ItemChildrenBuffer *buffer = &parent->childrenBuffer;
+    ItemChildrenBuffer *buffer = &item->childrenBuffer;
     if(buffer->length == buffer->capacity)
     {
         buffer->capacity *= 2;
@@ -21,8 +21,27 @@ void AppendChild(Item* parent, Item* child)
         FreeMemory(buffer->children);
         buffer->children = newChildren;
     }
-    buffer->children[buffer->length++] = child;
+}
+
+void AppendChild(Item *parent, Item* child)
+{
+    ExpandBufferIfFull(parent);
+    parent->childrenBuffer.children[parent->childrenBuffer.length++] = child;
     child->parent = parent;
+}
+
+void InsertChildAt(Item* parent, Item* child, i32 index)
+{
+    ExpandBufferIfFull(parent);
+
+    ItemChildrenBuffer *buffer = &parent->childrenBuffer;
+    Item **from = buffer->children + index;
+    Item **to = buffer->children + index + 1;
+    MoveMemory(to, from, (buffer->length - index) * sizeof(Item*));
+
+    buffer->children[index] = child;
+    child->parent = parent;
+    buffer->length++;
 }
 
 i32 RemoveChildFromParent(Item* child)

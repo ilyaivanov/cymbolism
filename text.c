@@ -13,6 +13,13 @@ inline void MoveBytesLeft(char *ptr, int length)
     }
 }
 
+void InitEmptyBufferWithCapacity(StringBuffer *buffer, i32 capacity)
+{
+    buffer->capacity = capacity;
+    buffer->text = AllocateMemory(buffer->capacity);
+    buffer->length = 0;
+}
+
 void InitBuffer(StringBuffer *buffer, char* text, i32 sourceSize)
 {
     buffer->capacity = sourceSize * 2;
