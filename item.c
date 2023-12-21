@@ -2,6 +2,39 @@
 
 #define IsRoot(item) (!item->parent)
 
+// GetBit and SetBit is lousy copied from with small modifications
+// https://stackoverflow.com/a/47990/1283124
+inline GetBit(u32 flags, u32 bitPosition)
+{
+    return (flags >> bitPosition) & (u32)1;
+}
+
+inline SetBit(u32 *flags, u32 bitPosition, u32 val)
+{
+    *flags = (*flags & ~((u32)1 << bitPosition)) | ((u32)val << bitPosition);
+}
+
+inline i32 IsOpen(Item *item)
+{
+    return GetBit(item->flags, ItemStateFlag_IsOpen);
+}
+
+inline void SetIsOpen(Item *item, i32 isOpen)
+{
+    SetBit(&item->flags, ItemStateFlag_IsOpen, isOpen);
+}
+
+inline i32 IsDone(Item *item)
+{
+    return GetBit(item->flags, ItemStateFlag_IsDone);
+}
+
+inline void SetIsDone(Item *item, i32 isDone)
+{
+    SetBit(&item->flags, ItemStateFlag_IsDone, isDone);
+}
+
+
 //
 // Growable children list
 //
@@ -67,8 +100,8 @@ inline i32 RemoveChildFromParent(Item* child)
 
     child->parent->childrenBuffer.length--;
     if(ChildCount(child->parent) == 0)
-        child->parent->isOpen = 0;
-        
+        SetIsOpen(child->parent, 0);
+
     child->parent = 0;
     return index;
 }
@@ -123,7 +156,7 @@ inline void ForEachVisibleChild(AppState *state, Item *parent, ForEachLeveledHan
 
         handler(state, current.ref, current.level);
 
-        if (item->isOpen)
+        if (IsOpen(item))
         {
             for (int c = ChildCount(item) - 1; c >= 0; c--)
                 stack[++currentItemInStack] = (ItemInStack){GetChildAt(item, c), current.level + 1};
@@ -174,7 +207,7 @@ inline void ForEachActualChildLeveled(AppState *state, Item *parent, ForEachLeve
 
 Item *GetItemBelow(Item *item)
 {
-    if (item->isOpen)
+    if (IsOpen(item))
     {
         return GetChildAt(item, 0);
     }
@@ -188,7 +221,7 @@ Item *GetItemBelow(Item *item)
         }
         else
         {
-            while (!IsRoot(parent) && GetItemIndex(parent) == ChildCount(parent->parent) - 1 && parent->isOpen)
+            while (!IsRoot(parent) && GetItemIndex(parent) == ChildCount(parent->parent) - 1 && IsOpen(parent))
                 parent = parent->parent;
             if (!IsRoot(parent))
                 return GetChildAt(parent->parent, GetItemIndex(parent) + 1);
@@ -205,7 +238,7 @@ Item* GetItemAbove(Item * item)
         return parent;
     Item *prevItem = GetChildAt(parent, itemIndex - 1);
     //looking for the most nested item
-    while(prevItem->isOpen)
+    while(IsOpen(prevItem))
         prevItem = GetChildAt(prevItem, ChildCount(prevItem) - 1);
     return prevItem;
 
@@ -272,7 +305,7 @@ void MoveItemRight(AppState *state, Item *item)
         InitChildrenIfEmptyWithDefaultCapacity(prevItem);
         AppendChild(prevItem, item);
 
-        prevItem->isOpen = 1;
+        SetIsOpen(prevItem, 1);
     }
 }
 
@@ -354,7 +387,7 @@ void InitRootFromFile(Item *root, FileContent file)
         
         if(ChildCount(parentSlice.item) == 0)
         {
-            parentSlice.item->isOpen = 1;
+            SetIsOpen(parentSlice.item, 1);
             InitChildren(parentSlice.item, 4);
         }
 

@@ -44,6 +44,7 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
 
     void *bits;
     HBITMAP bitmap = CreateDIBSection(deviceContext, &info, DIB_RGB_COLORS, &bits, 0, 0);
+    MyBitmap fontCanvas = {.bytesPerPixel = 4, .height = textureSize, .width = textureSize, .pixels = bits};
 
     SelectObject(deviceContext, bitmap);
     SelectObject(deviceContext, font);
@@ -74,13 +75,11 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
     Start(FontTexturesInitialization);
 
     SIZE size;
-    u32 bytesAllocated = 0;
-    for (wchar_t ch = 32; ch <= 1500; ch += 1)
+    for (wchar_t ch = 32; ch <= MAX_CHAR_CODE; ch += 1)
     {
         int len = 1;
         GetTextExtentPoint32W(deviceContext, &ch, len, &size);
 
-        fontData->widths[ch] = size.cx;
         TextOutW(deviceContext, 0, 0, &ch, len);
 
         MyBitmap* texture = &fontData->textures[ch];
@@ -89,24 +88,30 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
         texture->bytesPerPixel = 4;
 
         texture->pixels = AllocateMemory(texture->height * texture->width * texture->bytesPerPixel);
-        bytesAllocated += texture->height * texture->width * texture->bytesPerPixel;
 
-        u32 *row = (u32 *)texture->pixels;
-        u32 *source = (u32 *)bits;
-        for (u32 y = 0; y < texture->height; y += 1)
-        {
-            u32 *pixel = row;
-            u32 *sourcePixel = source;
-            for (u32 x = 0; x < texture->width; x += 1)
-            {
-                *pixel = *sourcePixel;
-                sourcePixel += 1;
-                pixel += 1;
-            }
-            source += textureSize;
-            row += texture->width;
-        }
+        CopyRectTo(&fontCanvas, texture);
     }
+
+
+    // BEGIN ugly fucking design for checkmark (sparse unicode handling for 200k symbols will fix this)
+    //
+    wchar_t checkmark = 10003; // code for ✓
+    // wchar_t checkmark = 9989; // code for ✅
+    // wchar_t checkmark = 9745; // code for ☑
+    GetTextExtentPoint32W(deviceContext, &checkmark, 1, &size);
+
+    TextOutW(deviceContext, 0, 0, &checkmark, 1);
+
+    MyBitmap* texture = &fontData->checkmark;
+    texture->width = size.cx;
+    texture->height = size.cy;
+    texture->bytesPerPixel = 4;
+
+    texture->pixels = AllocateMemory(texture->height * texture->width * texture->bytesPerPixel);
+
+    CopyRectTo(&fontCanvas, texture);
+    //
+    // END of ugly fucking design for checkmark
 
     Stop(FontTexturesInitialization);
 
@@ -124,7 +129,7 @@ inline MyBitmap *GetGlyphBitmap(FontData *font, char codepoint)
 
 inline u8 GetGlyphWidth(FontData *font,char codepoint)
 {
-    return font->widths[codepoint];
+    return font->textures[codepoint].width;
 }
 
 inline i32 GetTextWidth(FontData *font, char *text, i32 len)
@@ -132,7 +137,7 @@ inline i32 GetTextWidth(FontData *font, char *text, i32 len)
     i32 res = 0;
     for(int i = 0; i < len; i++)
     {
-        res += GetGlyphBitmap(font, *text)->width + GetKerningValue(font, *text, *(text + 1));
+        res += GetGlyphWidth(font, *text) + GetKerningValue(font, *text, *(text + 1));
         text++;
     }
     return res;

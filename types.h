@@ -49,14 +49,19 @@ typedef struct ItemChildrenBuffer
     i32 length;
 } ItemChildrenBuffer;
 
+typedef enum ItemStateFlag
+{
+    ItemStateFlag_IsOpen,
+    ItemStateFlag_IsDone,
+} ItemStateFlag;
+
 typedef struct Item
 {
     struct Item *parent;
-
     ItemChildrenBuffer childrenBuffer;
-
-    i32 isOpen;
     StringBuffer textBuffer;
+
+    u32 flags; 
 
     //This is a UI feature, I don't need to mix domain entities and UI representation
     u32 newLines[64];
@@ -85,17 +90,21 @@ typedef struct FontKerningPair
     i8 val;
 } FontKerningPair;
 
+#define MAX_CHAR_CODE 1500
+
 typedef struct FontData 
 {
-    MyBitmap textures[2000];
+    MyBitmap textures[MAX_CHAR_CODE];
+
+    // stupid fucking design, but I need to create sparse system for 200k unicode chars
+    MyBitmap checkmark;
 
     // Need to use ABC structure for this 
     // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getcharabcwidthsa
-    u8 widths[2000];
 
     TEXTMETRIC textMetric;
 
-    FontKerningPair pairsHash[16 * 1024];
+    FontKerningPair pairsHash[16 * 1024]; // Segoe UI has around 8k pairs
 } FontData;
 
 typedef struct Fonts

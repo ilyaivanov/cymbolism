@@ -88,9 +88,9 @@ i32 MoveSelectionBox(AppState *state, SelectionBoxMovement movement)
 
     if (movement == SelectionBox_Right)
     {
-        if (!state->selectedItem->isOpen && ChildCount(state->selectedItem) > 0)
+        if (!IsOpen(state->selectedItem) && ChildCount(state->selectedItem) > 0)
         {
-            state->selectedItem->isOpen = 1;
+            SetIsOpen(state->selectedItem, 1);
             return 1;
         }
         else if (ChildCount(state->selectedItem) > 0)
@@ -98,9 +98,9 @@ i32 MoveSelectionBox(AppState *state, SelectionBoxMovement movement)
     }
     if (movement == SelectionBox_Left)
     {
-        if (state->selectedItem->isOpen)
+        if (IsOpen(state->selectedItem))
         {
-            state->selectedItem->isOpen = 0;
+            SetIsOpen(state->selectedItem, 0);
             return 1;
         }
         else if (state->selectedItem->parent->parent)

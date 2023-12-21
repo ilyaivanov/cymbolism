@@ -10,8 +10,12 @@
 #define COLOR_MENU_BACKGROUND 0x262626
 #define COLOR_SELECTION_BAR_NORMAL_MODE 0x2F2F2F
 #define COLOR_SELECTION_BAR_INSERT_MODE 0x2F5F5F
+
+// Typography colors
 #define COLOR_SELECTED_ITEM 0xffffff
 #define COLOR_NORMAL_ITEM   0xdddddd
+#define COLOR_DONE_ITEM     0x999999
+
 
 #define FONT_SIZE 14
 #define FONT_FAMILY "Segoe UI"
@@ -116,7 +120,7 @@ void SaveState(AppState *state)
     state->isFileSaved = 1;
 }
 
-inline void MakrFileUnsaved(AppState *state)
+inline void MarkFileUnsaved(AppState *state)
 {
     state->isFileSaved = 0;
 }
@@ -212,25 +216,25 @@ inline void HandleInput(AppState *state, MyInput *input)
         else if (input->keysPressed['J'] && input->isPressed[VK_MENU])
         {
             MoveItemDown(state, state->selectedItem);
-            MakrFileUnsaved(state);
+            MarkFileUnsaved(state);
         }
 
         else if (input->keysPressed['K'] && input->isPressed[VK_MENU])
         {
             MoveItemUp(state, state->selectedItem);
-            MakrFileUnsaved(state);
+            MarkFileUnsaved(state);
         }
 
         else if (input->keysPressed['H'] && input->isPressed[VK_MENU])
         {
             MoveItemLeft(state, state->selectedItem);
-            MakrFileUnsaved(state);
+            MarkFileUnsaved(state);
         }
 
         else if (input->keysPressed['L'] && input->isPressed[VK_MENU])
         {
             MoveItemRight(state, state->selectedItem);
-            MakrFileUnsaved(state);
+            MarkFileUnsaved(state);
         }
 
         else if (input->keysPressed['J'])
@@ -259,7 +263,7 @@ inline void HandleInput(AppState *state, MyInput *input)
         {
             state->selectedItem = RemoveItem(state, state->selectedItem);
             UpdatePageHeight(state);
-            MakrFileUnsaved(state);
+            MarkFileUnsaved(state);
         }
         else if (input->keysPressed['O'])
         {
@@ -271,7 +275,7 @@ inline void HandleInput(AppState *state, MyInput *input)
             {
                 InitChildrenIfEmptyWithDefaultCapacity(state->selectedItem);
                 InsertChildAt(state->selectedItem, item, 0);
-                state->selectedItem->isOpen = 1;
+                SetIsOpen(state->selectedItem, 1);
             }
             else 
             {
@@ -284,7 +288,12 @@ inline void HandleInput(AppState *state, MyInput *input)
             state->isCursorVisible = 1;
             OnAppResize(state);
             UpdatePageHeight(state);
-            MakrFileUnsaved(state);
+            MarkFileUnsaved(state);
+        } 
+        else if (input->keysPressed[VK_RETURN] && input->isPressed[VK_CONTROL])
+        {
+            SetIsDone(state->selectedItem, !IsDone(state->selectedItem));
+            MarkFileUnsaved(state);
         }
     }
     else if (state->editMode == EditorMode_Insert)
@@ -293,14 +302,14 @@ inline void HandleInput(AppState *state, MyInput *input)
         {
             InsertCharAt(&state->selectedItem->textBuffer, state->cursorPos, input->charEventsThisFrame[i]);
             state->cursorPos++;
-            MakrFileUnsaved(state);
+            MarkFileUnsaved(state);
         }
 
         if(input->keysPressed[VK_BACK] && state->cursorPos > 0)
         {
             RemoveCharAt(&state->selectedItem->textBuffer, state->cursorPos - 1);
             state->cursorPos--;
-            MakrFileUnsaved(state);
+            MarkFileUnsaved(state);
         }
         // I don't need to update all items, but now I don't know x level of a selected item. 
         // This will be solved once I introduce statefull UI model
@@ -330,13 +339,23 @@ void RenderItem(AppState *state, Item *item, i32 level)
         DrawRect(&state->canvas, 0, rectY, state->canvas.width, rectHeight, selectionColor);
     }
 
-    i32 textColor = isItemSelected ? COLOR_SELECTED_ITEM : COLOR_NORMAL_ITEM;
+    
     i32 itemX = state->runningX + level * LEVEL_STEP;
     i32 itemY = state->runningY;
     DrawSquareAtCenter(&state->canvas, itemX, itemY, ICON_SIZE, 0x888888);
 
     if (ChildCount(item) == 0)
         DrawSquareAtCenter(&state->canvas, itemX, itemY, ICON_SIZE - 4, COLOR_APP_BACKGROUND);
+    
+    i32 isDone = IsDone(item);
+    i32 textColor = isItemSelected ? COLOR_SELECTED_ITEM : isDone ? COLOR_DONE_ITEM : COLOR_NORMAL_ITEM;
+
+    if (isDone)
+    {
+        MyBitmap *t = &state->fonts.regular.checkmark;
+        DrawTextureCentered(&state->canvas, t, state->canvas.width - PAGE_PADDING, itemY, textColor);
+    }
+
 
     i32 textX = itemX + ICON_SIZE / 2 + TEXT_TO_ICON;
 
@@ -404,6 +423,8 @@ void UpdateAndDrawApp(AppState *state, MyInput *input)
 
 
     DrawTextRightBottom(&state->canvas, font, state->canvas.width - padding, state->canvas.height - padding, &buff[0], strlen(&buff[0]), labelsC);
+
+
 }
 
 

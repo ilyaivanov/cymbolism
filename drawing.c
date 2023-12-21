@@ -1,6 +1,25 @@
 #include <math.h>
 #include "types.h"
 
+// takes dimensions of destinations, reads rect from source at (0,0)
+inline void CopyRectTo(MyBitmap *sourceT, MyBitmap *destination)
+{
+    u32 *row = (u32 *)destination->pixels;
+    u32 *source = (u32 *)sourceT->pixels;
+    for (u32 y = 0; y < destination->height; y += 1)
+    {
+        u32 *pixel = row;
+        u32 *sourcePixel = source;
+        for (u32 x = 0; x < destination->width; x += 1)
+        {
+            *pixel = *sourcePixel;
+            sourcePixel += 1;
+            pixel += 1;
+        }
+        source += sourceT->width;
+        row += destination->width;
+    }
+}
 
 // need alpha blending
 void DrawRect(MyBitmap *bitmap, i32 x, i32 y, i32 width, i32 height, i32 color)
@@ -141,4 +160,9 @@ inline void DrawTextureTopLeft(MyBitmap *destination, MyBitmap *texture, float t
         destinationRow += destination->width;
         sourceRow += texture->width;
     }
+}
+
+inline void DrawTextureCentered(MyBitmap *destination, MyBitmap *texture, float textX, float textY, u32 color)
+{
+    DrawTextureTopLeft(destination, texture, textX - texture->width / 2, textY - texture->height / 2, color);
 }
