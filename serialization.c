@@ -192,7 +192,7 @@ void AppendItem(AppState*state, Item*item, i32 level)
         if (!isOpen && ChildCount(item) > 0)
             AppendChar('h');
 
-        if(!isDone && isDone)
+        if(!isDone && !(!isOpen && ChildCount(item) > 0))
             AppendChar(' ');
 
 
