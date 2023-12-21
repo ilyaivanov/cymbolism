@@ -3,6 +3,7 @@
 #include "text.c"
 #include "number.c"
 #include "item.c"
+#include "serialization.c"
 #include "cursorAndSelection.c"
 
 #define BACKGROUND_COLOR_GREY 0x18
@@ -65,15 +66,17 @@ void SplitTextIntoLines(Item *item, FontData *font, u32 maxWidth)
     item->newLinesCount = currentLine;
 }
 
+
+#define FILE_PATH "..\\data.txt"
+
 void InitApp(AppState *state)
 {
     Start(StartUp);
     
     InitFontSystem(&state->fonts.regular, FONT_SIZE, FONT_FAMILY);
     
-    // InitRoot(&state->root);
-    FileContent file = ReadMyFileImp("..\\data1.txt");
-    InitRootFromFile(&state->root, file);
+    FileContent file = ReadMyFileImp(FILE_PATH);
+    ParseFileContent(state, &state->root, file);
     VirtualFreeMemory(file.content);
 
 
@@ -85,38 +88,16 @@ void InitApp(AppState *state)
     PrintStartupResults();
 }
 
-char *contentToSave = 0;
-i32 currentContent = 0;
-i32 contentSize = 0;
-
-void AppendItem(AppState*state, Item*item, i32 level)
-{
-    for(int i = 0; i < level*2; i++){
-        *(contentToSave + currentContent) = ' ';
-        currentContent++;
-    }
-
-    for(int i = 0; i < item->textBuffer.length; i++)
-    {
-        *(contentToSave + currentContent) = *(item->textBuffer.text + i);
-        currentContent++;
-    }
-
-    *(contentToSave + currentContent) = '\n';
-    currentContent++;
-}
-
 void SaveState(AppState *state)
 {
-    contentSize = 20 * 1024;
-    currentContent = 0;
-    contentToSave = AllocateMemory(contentSize);
+    u32 contentSize = 40 * 1024; //assumes 40kb is enought, just for now 
 
-    ForEachActualChildLeveled(state, &state->root, AppendItem);
+    char *buffer = VirtualAllocateMemory(contentSize);
+    u32 bytesWritten = SerializeState(state, buffer, contentSize);
+    WriteMyFile(FILE_PATH, buffer, bytesWritten);
 
-    WriteMyFile("..\\data1.txt", contentToSave, currentContent - 1);
 
-    FreeMemory(contentToSave);
+    VirtualFreeMemory(buffer);
     state->isFileSaved = 1;
 }
 

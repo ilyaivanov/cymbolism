@@ -53,6 +53,10 @@ typedef enum ItemStateFlag
 {
     ItemStateFlag_IsOpen,
     ItemStateFlag_IsDone,
+
+    // indicated wheather I read this item as "[ ] My item" or "[y] My item" from a file
+    // I don't want to obtruce the file by always placings [ ] for each item, only if any of the flags are set or it was like that in the file
+    ItemStateFlag_IsSerializedWithPlaceholder,
 } ItemStateFlag;
 
 typedef struct Item
