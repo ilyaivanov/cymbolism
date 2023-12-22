@@ -76,33 +76,33 @@ inline void DrawTextureTopLeft(MyBitmap *destination, MyBitmap *texture, float t
 
     u32 *sourceRow = (u32*)texture->pixels;
 
-    if (textX >= destination->width)
-    {
+    if (textX >= destination->width || textY >= destination->height)
         return;
-    }
-    else if (textX + width > destination->width)
-    {
-        width = destination->width - textX;
-    }
-    else if (textX < 0)
+
+    
+    
+    if (textX < 0)
     {
         width = textX + width;
         textX = 0;
     }
 
-    if (textY >= destination->height)
+    if (textX + width > destination->width)
     {
-        return;
+        width = destination->width - textX;
     }
-    else if (textY + height > destination->height)
-    {
-        height = destination->height - textY;
-    }
-    else if (textY < 0)
+
+    
+    if (textY < 0)
     {
         height = textY + height;
         sourceRow += width * (i32)(-textY);
         textY = 0;
+    }
+
+    if (textY + height > destination->height)
+    {
+        height = destination->height - textY;
     }
 
     u32 *destinationRow = (u32 *)destination->pixels + destination->width * (u32)textY + (u32)textX;
