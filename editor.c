@@ -234,10 +234,10 @@ inline void HandleInput(AppState *state, MyInput *input)
         {
             if (MoveSelectionBox(state, SelectionBox_Right))
             {
-                UpdatePageHeight(state);
-
                 // goal is to trigger new line recalculation. Some items might be initially hidden
                 OnAppResize(state);
+
+                UpdatePageHeight(state);
             }
         }
         else if (input->keysPressed['I'])
