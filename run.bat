@@ -11,7 +11,7 @@ set CompilerOptions=/nologo /MD /Zi
 
 set LinkerOptions=user32.lib gdi32.lib winmm.lib dwmapi.lib 
 
-cl %CompilerOptions% ..\win.c .\resources.res %LinkerOptions% >> NUL
+cl %CompilerOptions% ..\win.c .\resources.res %LinkerOptions%
 
 echo Compiled
 
