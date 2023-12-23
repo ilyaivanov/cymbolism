@@ -114,7 +114,7 @@ inline void ReportMemoryChanges()
         char buff[512] = {0};
 
         
-        sprintf(buff, "   +%-12lld %d -%-12lld %d. Total: +%-12lld -%-12lld\n",
+        sprintf(buff, "   +%-12lld %lld -%-12lld %lld. Total: +%-12lld -%-12lld\n",
                 countMetrics.count[MemoryAllocated], countMetrics.callCount[MemoryAllocated],
                 countMetrics.count[MemoryFreed], countMetrics.callCount[MemoryFreed], 
                 countMetrics.totalCount[MemoryAllocated], countMetrics.totalCount[MemoryFreed]);

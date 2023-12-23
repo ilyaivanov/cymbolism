@@ -34,7 +34,7 @@ void MoveCursorDown(AppState *state)
             if(i != item->newLinesCount)
             {
                 i32 lineOffset = state->cursorPos - item->newLines[i - 1];
-                state->cursorPos = item->newLines[i] + lineOffset;
+                state->cursorPos = item->newLines[i] + lineOffset + (i == 1 ? 1 : 0);
                 break;
             }
         }
@@ -55,7 +55,7 @@ void MoveCursorUp(AppState *state)
                 // TODO: will need to stabilize vertical cursor movement. 
                 // Also introduce "desired cursor locaiton" which won't change during vertical movement, but change during horizontal
                 // i32 offsetWidth = GetTextWidth(font, item->textBuffer.text + item->newLines[i - 1], lineOffset);
-                state->cursorPos = item->newLines[i - 2] + lineOffset;
+                state->cursorPos = item->newLines[i - 2] + lineOffset - (i == 2 ? -1 : 0);
                 break;
             }
         }

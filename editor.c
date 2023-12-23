@@ -2,6 +2,7 @@
 #include "types.h"
 #include "text.c"
 #include "number.c"
+#include "textReflow.c"
 #include "item.c"
 #include "serialization.c"
 #include "cursorAndSelection.c"
@@ -26,46 +27,6 @@
 #define LINE_HEIGHT 1.2f
 #define PAGE_PADDING 30
 #define BOTTOM_PADDING 50
-
-
-void SplitTextIntoLines(Item *item, FontData *font, u32 maxWidth)
-{
-    int currentLine = 0;
-    int runningWidth = 0;
-    int wordFirstLetterIndex = 0;
-    int wordLength = 0;
-
-    for (int i = 0; i < item->textBuffer.length; i += 1)
-    {
-        i8 ch = *(item->textBuffer.text + i);
-        
-        if ((ch == ' ' || i == item->textBuffer.length - 1) && runningWidth >= maxWidth)
-        {
-            item->newLines[++currentLine] = wordFirstLetterIndex - 1;        
-            runningWidth = wordLength;
-            wordFirstLetterIndex = i + 1;
-            wordLength = 0;
-        }
-        else 
-        {
-            int w = GetGlyphWidth(font, ch);
-            if (ch == ' ')
-            {
-                wordFirstLetterIndex = i + 1;
-                wordLength = 0;
-            }
-            else
-            {
-                wordLength += w;
-            }
-            runningWidth += w;
-        }
-    }
-
-    item->newLines[++currentLine] = item->textBuffer.length;   
-    item->newLinesCount = currentLine;
-}
-
 
 #define FILE_PATH "..\\data.txt"
 
@@ -313,7 +274,7 @@ void RenderItem(AppState *state, Item *item, i32 level)
     i32 lineHeightInPixels = fontHeight * LINE_HEIGHT;
 
     i32 isItemSelected = item == state->selectedItem;
-    if (item == state->selectedItem)
+    if (isItemSelected)
     {
         i32 selectionColor = state->editMode == EditorMode_Insert ? COLOR_SELECTION_BAR_INSERT_MODE : COLOR_SELECTION_BAR_NORMAL_MODE;
         i32 rectY = state->runningY - lineHeightInPixels / 2;
@@ -350,16 +311,17 @@ void RenderItem(AppState *state, Item *item, i32 level)
     {
         // 'FONT_SIZE / 10 - 1' is picked by hand judging purely by eye, without this text seems off
         i32 textY = state->runningY - FONT_SIZE / 10 - 1;
-        char *text = item->textBuffer.text + (item->newLines[i - 1] == 0 ? item->newLines[i - 1] : item->newLines[i - 1] + 1);
-        i32 lineLength = item->newLines[i] - item->newLines[i - 1];
+        i32 start = (item->newLines[i - 1] == 0 ? item->newLines[i - 1] : item->newLines[i - 1] + 1);
+        char *text = item->textBuffer.text + start;
+        i32 lineLength = item->newLines[i] - start;
         
         Start(FramePrintTextDrawTexture);
         DrawTextLeftCenter(&state->canvas, font, textX, textY, text, lineLength, textColor);
         Stop(FramePrintTextDrawTexture);
 
-        if ((state->isCursorVisible || state->editMode == EditorMode_Insert) && item == state->selectedItem && state->cursorPos >= item->newLines[i - 1] && state->cursorPos <= item->newLines[i])
+        if ((state->isCursorVisible || state->editMode == EditorMode_Insert) && item == state->selectedItem && state->cursorPos >= start && state->cursorPos <= item->newLines[i])
         {
-            i32 cursorPosOnLine = state->cursorPos - item->newLines[i - 1];
+            i32 cursorPosOnLine = state->cursorPos - start;
             DrawRect(&state->canvas, textX + GetTextWidth(font, text, cursorPosOnLine), textY - fontHeight / 2, 1, fontHeight, 0xffffff);
         }
         state->runningY += fontHeight;

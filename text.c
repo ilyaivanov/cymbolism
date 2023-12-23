@@ -61,6 +61,7 @@ void RemoveCharAt(StringBuffer *buffer, i32 at)
     buffer->length--;
 }
 
+//Not used at this point, only ASCI supported
 i32 ParseUTF8Codepoint(u8 *bytes, i32 i, u32 *codepoint)
 {
     if (!(bytes[i] & 0b10000000))
