@@ -295,7 +295,7 @@ void RenderItem(AppState *state, Item *item, i32 level)
         DrawSquareAtCenter(&state->canvas, itemX, itemY, ICON_SIZE - 4, COLOR_APP_BACKGROUND);
     
     i32 isDone = IsDone(item);
-    i32 textColor = isItemSelected ? COLOR_SELECTED_ITEM : isDone ? COLOR_DONE_ITEM : COLOR_NORMAL_ITEM;
+    i32 textColor = isDone ? COLOR_DONE_ITEM : isItemSelected ? COLOR_SELECTED_ITEM : COLOR_NORMAL_ITEM;
 
     if (isDone)
     {
