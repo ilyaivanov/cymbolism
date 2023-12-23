@@ -138,22 +138,22 @@ inline void HandleInput(AppState *state, MyInput *input)
     if (input->wheelDelta)
         ScrollBy(state, -input->wheelDelta);
 
+    if (input->keysPressed['L'] && input->isPressed[VK_CONTROL])
+        MoveCursor(state, CursorMove_Right);
+
+    else if (input->keysPressed['H'] && input->isPressed[VK_CONTROL])
+        MoveCursor(state, CursorMove_Left);
+
+    else if (input->keysPressed['J'] && input->isPressed[VK_CONTROL])
+        MoveCursor(state, CursorMove_Down);
+
+    else if (input->keysPressed['K'] && input->isPressed[VK_CONTROL])
+        MoveCursor(state, CursorMove_Up);
+
     if (state->editMode == EditorMode_Normal)
     {
         if (input->keysPressed['S'] && input->isPressed[VK_CONTROL])
             SaveState(state);
-
-        else if (input->keysPressed['L'] && input->isPressed[VK_CONTROL])
-            MoveCursor(state, CursorMove_Right);
-
-        else if (input->keysPressed['H'] && input->isPressed[VK_CONTROL])
-            MoveCursor(state, CursorMove_Left);
-
-        else if (input->keysPressed['J'] && input->isPressed[VK_CONTROL])
-            MoveCursor(state, CursorMove_Down);
-
-        else if (input->keysPressed['K'] && input->isPressed[VK_CONTROL])
-            MoveCursor(state, CursorMove_Up);
 
         else if (input->keysPressed['J'] && input->isPressed[VK_MENU])
         {
@@ -179,19 +179,21 @@ inline void HandleInput(AppState *state, MyInput *input)
             MarkFileUnsaved(state);
         }
 
-        else if (input->keysPressed['J'])
+        // need to think how to improve this and remove redundant negation check. 
+        // this is done so that when cursor is moved I won't move selection
+        else if (input->keysPressed['J'] && !input->isPressed[VK_CONTROL])
             MoveSelectionBox(state, SelectionBox_Down);
 
-        else if (input->keysPressed['K'])
+        else if (input->keysPressed['K'] && !input->isPressed[VK_CONTROL])
             MoveSelectionBox(state, SelectionBox_Up);
 
-        else if (input->keysPressed['H'])
+        else if (input->keysPressed['H'] && !input->isPressed[VK_CONTROL])
         {
             if (MoveSelectionBox(state, SelectionBox_Left))
                 UpdatePageHeight(state);
         }
 
-        else if (input->keysPressed['L'])
+        else if (input->keysPressed['L'] && !input->isPressed[VK_CONTROL])
         {
             if (MoveSelectionBox(state, SelectionBox_Right))
             {
@@ -230,13 +232,20 @@ inline void HandleInput(AppState *state, MyInput *input)
                 InsertChildAt(state->selectedItem->parent, item, targetIndex);
             }
             state->selectedItem = item;
-            state->cursorPos = 0;
             state->editMode = EditorMode_Insert;
-            state->isCursorVisible = 1;
+            UpdateCursorPosition(state, 0);
             OnAppResize(state);
             UpdatePageHeight(state);
             MarkFileUnsaved(state);
         } 
+        else if (input->keysPressed['W'])
+        {
+            UpdateCursorPosition(state, GetNextWordIndex(state->selectedItem, state->cursorPos));
+        }
+        else if (input->keysPressed['B'])
+        {
+            UpdateCursorPosition(state, GetPrevWordIndex(state->selectedItem, state->cursorPos));
+        }
         else if (input->keysPressed[VK_RETURN] && input->isPressed[VK_CONTROL])
         {
             SetIsDone(state->selectedItem, !IsDone(state->selectedItem));
@@ -245,25 +254,38 @@ inline void HandleInput(AppState *state, MyInput *input)
     }
     else if (state->editMode == EditorMode_Insert)
     {
-        for (int i = 0; i < input->charEventsThisFrameCount; i++)
+        if (input->keysPressed['W'] && input->isPressed[VK_CONTROL])
         {
-            InsertCharAt(&state->selectedItem->textBuffer, state->cursorPos, input->charEventsThisFrame[i]);
-            state->cursorPos++;
-            MarkFileUnsaved(state);
+            UpdateCursorPosition(state, GetNextWordIndex(state->selectedItem, state->cursorPos));
         }
-
-        if(input->keysPressed[VK_BACK] && state->cursorPos > 0)
+        else if (input->keysPressed['B'] && input->isPressed[VK_CONTROL])
         {
-            RemoveCharAt(&state->selectedItem->textBuffer, state->cursorPos - 1);
-            state->cursorPos--;
-            MarkFileUnsaved(state);
+            UpdateCursorPosition(state, GetPrevWordIndex(state->selectedItem, state->cursorPos));
         }
-        // I don't need to update all items, but now I don't know x level of a selected item. 
-        // This will be solved once I introduce statefull UI model
-        ForEachVisibleChild(state, &state->root, UpdateLines);
-
-        if(input->keysPressed[VK_ESCAPE] || input->keysPressed[VK_RETURN])
+        else if (input->keysPressed[VK_ESCAPE] || input->keysPressed[VK_RETURN])
+        {
             state->editMode = EditorMode_Normal;
+        }
+        else
+        {
+
+            for (int i = 0; i < input->charEventsThisFrameCount; i++)
+            {
+                InsertCharAt(&state->selectedItem->textBuffer, state->cursorPos, input->charEventsThisFrame[i]);
+                state->cursorPos++;
+                MarkFileUnsaved(state);
+            }
+
+            if (input->keysPressed[VK_BACK] && state->cursorPos > 0)
+            {
+                RemoveCharAt(&state->selectedItem->textBuffer, state->cursorPos - 1);
+                state->cursorPos--;
+                MarkFileUnsaved(state);
+            }
+            // I don't need to update all items, but now I don't know x level of a selected item.
+            // This will be solved once I introduce statefull UI model
+            ForEachVisibleChild(state, &state->root, UpdateLines);
+        }
     }
 }
 void RenderItem(AppState *state, Item *item, i32 level)
@@ -366,14 +388,10 @@ void UpdateAndDrawApp(AppState *state, MyInput *input)
     DrawTextCenterBottom(&state->canvas, font, state->canvas.width / 2, state->canvas.height - padding, label2, strlen(label2), labelsC);
     
     
-    char buff[256];
-    sprintf(buff, "Cur %d | %d length | %d capacity",
-            state->cursorPos, state->selectedItem->textBuffer.length, state->selectedItem->textBuffer.capacity);
-
-
-    DrawTextRightBottom(&state->canvas, font, state->canvas.width - padding, state->canvas.height - padding, &buff[0], strlen(&buff[0]), labelsC);
-
-
+    // char buff[256];
+    // sprintf(buff, "Cur %d | %d length | %d capacity",
+    //         state->cursorPos, state->selectedItem->textBuffer.length, state->selectedItem->textBuffer.capacity);
+    // DrawTextRightBottom(&state->canvas, font, state->canvas.width - padding, state->canvas.height - padding, &buff[0], strlen(&buff[0]), labelsC);
 }
 
 

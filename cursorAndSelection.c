@@ -23,6 +23,12 @@ typedef enum SelectionBoxMovement
     SelectionBox_Up,
 } SelectionBoxMovement;
 
+void UpdateCursorPosition(AppState *state, i32 newPos)
+{
+    state->cursorPos = newPos;
+    state->isCursorVisible = 1;
+}
+
 
 void MoveCursorDown(AppState *state)
 {
