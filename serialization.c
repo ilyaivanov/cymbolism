@@ -17,12 +17,12 @@ typedef struct ItemEntry
 
 inline void TrimEntry(ItemEntry *entry, char *content)
 {
-    while((*(content + entry->start) == ' ') || (*(content + entry->start) == '\n') || (entry->start == entry->end))
+    while(((*(content + entry->start) == ' ') || (*(content + entry->start) == '\n')) && (entry->start != entry->end))
     {
         entry->start++;
     }
 
-    while((*(content + entry->end) == ' ')   || (*(content + entry->end) == '\n')   || (entry->start == entry->end))
+    while(((*(content + entry->end) == ' ')   || (*(content + entry->end) == '\n')) && (entry->start != entry->end))
     {
         entry->end--;
     }
@@ -97,6 +97,7 @@ void ParseFileContent(AppState *state, Item *root, FileContent file)
                 u32 end = i == file.size - 1 ? i + 1 : i;
                 ItemEntry entry = {.start = start, .end = end, .level = lineLevel, .flags = itemFlags};
                 TrimEntry(&entry, file.content);
+
                 slices[slicesCount++] = entry;
             }
 
