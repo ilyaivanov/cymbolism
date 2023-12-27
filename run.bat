@@ -11,7 +11,7 @@ set LinkerOptions=user32.lib gdi32.lib winmm.lib dwmapi.lib
 
 
 IF "%arg1%" == "u" (
-    cl %CompilerOptions% ..\unit.c %LinkerOptions%
+    cl %CompilerOptions% ..\playground\unit.c %LinkerOptions%
     call .\unit.exe
     GOTO end
 )

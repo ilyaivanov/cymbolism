@@ -1,8 +1,8 @@
 #include <windows.h>
 #include <stdio.h>
-#include "memory.c"
-#include "text.c"
-#include "textReflow.c"
+#include "..\memory.c"
+#include "..\text.c"
+#include "..\textReflow.c"
 
 void main()
 {
