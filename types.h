@@ -102,6 +102,7 @@ typedef struct FontData
 
     // stupid fucking design, but I need to create sparse system for 200k unicode chars
     MyBitmap checkmark;
+    MyBitmap chevron;
 
     // Need to use ABC structure for this 
     // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getcharabcwidthsa
@@ -126,6 +127,7 @@ typedef struct AppState
 {
     Item root;
     Item *selectedItem;
+    Item *focusedItem;
     Fonts fonts;
 
     // used to detect screen width changes in the render function without OnResize event

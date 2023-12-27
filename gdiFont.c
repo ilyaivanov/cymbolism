@@ -18,6 +18,22 @@ inline int HashAndProbeIndex(FontData *font, u16 left, u16 right)
     return index;
 }
 
+void DrawCharIntoBitmap(MyBitmap *fontCanvas, HDC *deviceContext, MyBitmap* texture, wchar_t ch)
+{
+    SIZE size;
+    GetTextExtentPoint32W(*deviceContext, &ch, 1, &size);
+
+    TextOutW(*deviceContext, 0, 0, &ch, 1);
+
+    texture->width = size.cx;
+    texture->height = size.cy;
+    texture->bytesPerPixel = 4;
+
+    texture->pixels = AllocateMemory(texture->height * texture->width * texture->bytesPerPixel);
+
+    CopyRectTo(fontCanvas, texture);
+}
+
 void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
 {
     Start(FontInitialization);
@@ -95,21 +111,8 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
 
     // BEGIN ugly fucking design for checkmark (sparse unicode handling for 200k symbols will fix this)
     //
-    wchar_t checkmark = 10003; // code for ✓
-    // wchar_t checkmark = 9989; // code for ✅
-    // wchar_t checkmark = 9745; // code for ☑
-    GetTextExtentPoint32W(deviceContext, &checkmark, 1, &size);
-
-    TextOutW(deviceContext, 0, 0, &checkmark, 1);
-
-    MyBitmap* texture = &fontData->checkmark;
-    texture->width = size.cx;
-    texture->height = size.cy;
-    texture->bytesPerPixel = 4;
-
-    texture->pixels = AllocateMemory(texture->height * texture->width * texture->bytesPerPixel);
-
-    CopyRectTo(&fontCanvas, texture);
+    DrawCharIntoBitmap(&fontCanvas, &deviceContext, &fontData->checkmark, 10003); // code for ✓
+    DrawCharIntoBitmap(&fontCanvas, &deviceContext, &fontData->chevron, 0x203A); // code for ›
     //
     // END of ugly fucking design for checkmark
 

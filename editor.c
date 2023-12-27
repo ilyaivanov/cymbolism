@@ -18,7 +18,7 @@
 #define COLOR_NORMAL_ITEM   0xdddddd
 #define COLOR_DONE_ITEM     0x999999
 
-
+#define HEADER_HEIGHT 30
 #define FONT_SIZE 14
 #define FONT_FAMILY "Segoe UI"
 #define ICON_SIZE 10
@@ -40,7 +40,7 @@ void InitApp(AppState *state)
     ParseFileContent(state, &state->root, file);
     VirtualFreeMemory(file.content);
 
-
+    state->focusedItem = &state->root;
     state->selectedItem = GetChildAt(&state->root, 0);
     state->isFileSaved = 1;
 
@@ -152,7 +152,18 @@ inline void HandleInput(AppState *state, MyInput *input)
 
     if (state->editMode == EditorMode_Normal)
     {
-        if (input->keysPressed['S'] && input->isPressed[VK_CONTROL])
+        if(input->keysPressed['F'] && input->isPressed[VK_SHIFT])
+        {
+            if(!IsRoot(state->focusedItem))
+                state->focusedItem = state->focusedItem->parent;
+
+            //TOOD: extra logic here to check if selected item is visible
+        }
+        else if(input->keysPressed['F'] )
+        {
+            state->focusedItem = state->selectedItem;
+        }
+        else if (input->keysPressed['S'] && input->isPressed[VK_CONTROL])
             SaveState(state);
 
         else if (input->keysPressed['J'] && input->isPressed[VK_MENU])
@@ -358,10 +369,19 @@ void UpdateAndDrawApp(AppState *state, MyInput *input)
 
     i32 lineHeightInPixels = state->fonts.regular.textMetric.tmHeight * LINE_HEIGHT;
 
+    i32 hasHeader = state->focusedItem != &state->root;
+
     state->runningX = PAGE_PADDING;
-    state->runningY = PAGE_PADDING + lineHeightInPixels / 2 - state->yOffset;
-    
-    ForEachVisibleChild(state, &state->root, RenderItem);
+    state->runningY = (hasHeader ? HEADER_HEIGHT : PAGE_PADDING) + lineHeightInPixels / 2 - state->yOffset;
+
+    ForEachVisibleChild(state, state->focusedItem, RenderItem);
+
+    if (hasHeader)
+    {
+        char *txt = state->focusedItem->textBuffer.text;
+        i32 len   = state->focusedItem->textBuffer.length;
+        DrawTextLeftCenter(&state->canvas, &state->fonts.regular, 8, HEADER_HEIGHT / 2, txt, len, COLOR_DONE_ITEM);
+    }
 
     if(state->pageHeight > state->canvas.height)
     {
