@@ -1,8 +1,4 @@
 @echo off
-if exist build rmdir /s /q build
-mkdir build
-pushd build
-
 set arg1=%1
 
 set CompilerOptions=/nologo /MD /Zi
@@ -10,9 +6,32 @@ set CompilerOptions=/nologo /MD /Zi
 set LinkerOptions=user32.lib gdi32.lib winmm.lib dwmapi.lib 
 
 
+IF "%arg1%" == "l" (
+    if exist playground\build rmdir /s /q playground\build
+    mkdir playground\build
+    pushd playground\build
+    cl %CompilerOptions% ..\..\playground\listener.c %LinkerOptions%
+    popd
+    call .\playground\build\listener.exe
+    GOTO terminate
+)
+
+
+
+if exist build rmdir /s /q build
+mkdir build
+pushd build
+
+
 IF "%arg1%" == "u" (
     cl %CompilerOptions% ..\playground\unit.c %LinkerOptions%
     call .\unit.exe
+    GOTO end
+)
+
+IF "%arg1%" == "g" (
+    cl %CompilerOptions% ..\playground\grove.c %LinkerOptions%
+    call .\grove.exe
     GOTO end
 )
 
@@ -35,3 +54,4 @@ IF NOT "%arg1%" == "b" (
 
 :end
 popd
+:terminate
