@@ -1,3 +1,6 @@
+// Depedendencies are not managed properly in the project, I can't come with a good solution now on how I manage files
+// Several files will be included twice - in shell and in lib. Thus making changes to the those files will rebuild only lib.
+// Need to think about this a bit deeper. 
 #include <windows.h>
 #include <stdio.h>
 #include "types.h"
