@@ -1,7 +1,43 @@
 #include <windows.h>
 #include "types.h"
+#include <dwmapi.h>
 
 #define EDITOR_DEFAULT_WINDOW_STYLE (WS_OVERLAPPEDWINDOW)
+
+//
+// File API
+//
+
+FileContent ReadMyFileImp(char* path)
+{
+    HANDLE file = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+
+    LARGE_INTEGER size;
+    GetFileSizeEx(file, &size);
+
+    u32 fileSize = (u32)size.QuadPart;
+
+    void *buffer = VirtualAllocateMemory(fileSize);
+
+    DWORD bytesRead;
+    ReadFile(file, buffer, fileSize, &bytesRead, 0);
+    CloseHandle(file);
+
+    return (FileContent){.content = buffer, .size = bytesRead};
+}
+
+
+void WriteMyFile(char *path, char* content, int size)
+{
+    HANDLE file = CreateFileA(path, GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS, 0, 0);
+
+    DWORD bytesWritten;
+    int res = WriteFile(file, content, size, &bytesWritten, 0);
+    CloseHandle(file);
+
+    MyAssert(bytesWritten == size);
+}
+
 
 //
 // BITMAP
@@ -17,24 +53,19 @@ void InitBitmapInfo(BITMAPINFO * bitmapInfo, u32 width, u32 height)
     bitmapInfo->bmiHeader.biCompression = BI_RGB;
 }
 
-void OnResize(HWND window, BITMAPINFO *bitmapInfo, MyBitmap *bitmap)
+void OnResize(BITMAPINFO *bitmapInfo, MyBitmap *bitmap, u32 width, u32 height)
 {
-    RECT rect;
-    GetClientRect(window, &rect);
-
     if (bitmap->pixels)
-    {
-        VirtualFree(bitmap->pixels, 0, MEM_RELEASE);
-    }
+        VirtualFreeMemory(bitmap->pixels);
 
-    bitmap->width = rect.right - rect.left;
-    bitmap->height = rect.bottom - rect.top;
+    bitmap->width = width;
+    bitmap->height = height;
     bitmap->bytesPerPixel = 4;
 
     InitBitmapInfo(bitmapInfo, bitmap->width, bitmap->height);
 
     i32 size = bitmap->width * bitmap->height * bitmap->bytesPerPixel;
-    bitmap->pixels = VirtualAlloc(0, size, MEM_COMMIT, PAGE_READWRITE);
+    bitmap->pixels = VirtualAllocateMemory(size);
 }
 
 
@@ -52,26 +83,32 @@ inline void DrawBitmap(HDC dc, BITMAPINFO *bitmapInfo, MyBitmap *bitmap){
 
 HWND OpenGameWindow(HINSTANCE instance, WNDPROC OnEvent)
 {
-    WNDCLASS windowClass = {
+    WNDCLASSW windowClass = {
         .hInstance = instance,
         .lpfnWndProc = OnEvent,
-        .lpszClassName = "MyWindow",
+        .lpszClassName = L"MyWindow",
         .style = CS_VREDRAW | CS_HREDRAW | CS_OWNDC,
         .hCursor = LoadCursor(0, IDC_ARROW),
     };
-    RegisterClassA(&windowClass);
+    RegisterClassW(&windowClass);
 
     HDC dc = GetDC(0);
     int screenWidth = GetDeviceCaps(dc, HORZRES);
 
     int windowWidth = 800;
-    int windowHeight = 1200;
-    return CreateWindowA(windowClass.lpszClassName, "Cymbolism", EDITOR_DEFAULT_WINDOW_STYLE | WS_VISIBLE,
+    int windowHeight = 1600;
+    HWND window = CreateWindowW(windowClass.lpszClassName, (wchar_t*)"Cymbolism", EDITOR_DEFAULT_WINDOW_STYLE | WS_VISIBLE,
                          /* x */ screenWidth / 2 - windowWidth / 2,
-                         /* y */ 25,
+                         /* y */ 10,
                          /* w */ windowWidth,
                          /* h */ windowHeight,
                          0, 0, instance, 0);
+
+    BOOL USE_DARK_MODE = TRUE;
+    BOOL SET_IMMERSIVE_DARK_MODE_SUCCESS = SUCCEEDED(DwmSetWindowAttribute(
+        window, DWMWA_USE_IMMERSIVE_DARK_MODE, &USE_DARK_MODE, sizeof(USE_DARK_MODE)));
+
+    return window;
 }
 
 // taken from https://devblogs.microsoft.com/oldnewthing/20100412-00/?p=14353

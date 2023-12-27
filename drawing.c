@@ -1,6 +1,25 @@
 #include <math.h>
 #include "types.h"
 
+// takes dimensions of destinations, reads rect from source at (0,0)
+inline void CopyRectTo(MyBitmap *sourceT, MyBitmap *destination)
+{
+    u32 *row = (u32 *)destination->pixels;
+    u32 *source = (u32 *)sourceT->pixels;
+    for (u32 y = 0; y < destination->height; y += 1)
+    {
+        u32 *pixel = row;
+        u32 *sourcePixel = source;
+        for (u32 x = 0; x < destination->width; x += 1)
+        {
+            *pixel = *sourcePixel;
+            sourcePixel += 1;
+            pixel += 1;
+        }
+        source += sourceT->width;
+        row += destination->width;
+    }
+}
 
 // need alpha blending
 void DrawRect(MyBitmap *bitmap, i32 x, i32 y, i32 width, i32 height, i32 color)
@@ -52,39 +71,41 @@ inline void DrawSquareAtCenter(MyBitmap *bitmap, i32 x, i32 y, i32 size, i32 col
 
 inline void DrawTextureTopLeft(MyBitmap *destination, MyBitmap *texture, float textX, float textY, u32 color)
 {
-    u32 width = texture->width;
-    u32 height = texture->height;
+    i32 width = texture->width;
+    i32 height = texture->height;
 
-    if (textX >= destination->width)
-    {
+    u32 *sourceRow = (u32*)texture->pixels;
+
+    if (textX >= destination->width || textY >= destination->height)
         return;
-    }
-    else if (textX + width > destination->width)
-    {
-        width = destination->width - textX;
-    }
-    else if (textX < 0)
+
+    
+    
+    if (textX < 0)
     {
         width = textX + width;
         textX = 0;
     }
 
-    if (textY >= destination->height)
+    if (textX + width > destination->width)
     {
-        return;
+        width = destination->width - textX;
     }
-    else if (textY + height > destination->height)
-    {
-        height = destination->height - textY;
-    }
-    else if (textY < 0)
+
+    
+    if (textY < 0)
     {
         height = textY + height;
+        sourceRow += width * (i32)(-textY);
         textY = 0;
     }
 
+    if (textY + height > destination->height)
+    {
+        height = destination->height - textY;
+    }
+
     u32 *destinationRow = (u32 *)destination->pixels + destination->width * (u32)textY + (u32)textX;
-    u32 *sourceRow = (u32*)texture->pixels;
 
     u32 colorR = (color >> 16) & 0xff;
     u32 colorG = (color >> 8) & 0xff;
@@ -139,4 +160,9 @@ inline void DrawTextureTopLeft(MyBitmap *destination, MyBitmap *texture, float t
         destinationRow += destination->width;
         sourceRow += texture->width;
     }
+}
+
+inline void DrawTextureCentered(MyBitmap *destination, MyBitmap *texture, float textX, float textY, u32 color)
+{
+    DrawTextureTopLeft(destination, texture, textX - texture->width / 2, textY - texture->height / 2, color);
 }
