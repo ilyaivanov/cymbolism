@@ -57,7 +57,6 @@ void SaveState(AppState *state)
     u32 bytesWritten = SerializeState(state, buffer, contentSize);
     WriteMyFile(FILE_PATH, buffer, bytesWritten);
 
-
     VirtualFreeMemory(buffer);
     state->isFileSaved = 1;
 }
@@ -80,7 +79,8 @@ void OnAppResize(AppState *state)
 
 inline void ScrollTo(AppState *state, i32 val)
 {
-    state->yOffset = ClampI32(val, 0, state->pageHeight - state->canvas.height);
+    if(state->pageHeight > state->canvas.height)
+        state->yOffset = ClampI32(val, 0, state->pageHeight - state->canvas.height);
 }
 
 inline void ScrollBy(AppState *state, i32 delta)
