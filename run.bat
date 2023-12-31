@@ -10,7 +10,7 @@ IF "%arg1%" == "l" (
     if exist playground\build rmdir /s /q playground\build
     mkdir playground\build
     pushd playground\build
-    cl %CompilerOptions% ..\..\playground\listener.c %LinkerOptions%
+    cl %CompilerOptions% ..\..\playground\listener.c user32.lib advapi32.lib
     popd
     call .\playground\build\listener.exe
     GOTO terminate
@@ -26,12 +26,6 @@ pushd build
 IF "%arg1%" == "u" (
     cl %CompilerOptions% ..\playground\unit.c %LinkerOptions%
     call .\unit.exe
-    GOTO end
-)
-
-IF "%arg1%" == "g" (
-    cl %CompilerOptions% ..\playground\grove.c %LinkerOptions%
-    call .\grove.exe
     GOTO end
 )
 
