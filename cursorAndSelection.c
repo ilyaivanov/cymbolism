@@ -23,12 +23,6 @@ typedef enum SelectionBoxMovement
     SelectionBox_Up,
 } SelectionBoxMovement;
 
-void UpdateCursorPosition(AppState *state, i32 newPos)
-{
-    state->cursorPos = newPos;
-    state->isCursorVisible = 1;
-}
-
 
 void MoveCursorDown(AppState *state)
 {
@@ -76,14 +70,18 @@ void MoveCursor(AppState *state, CursorMovement movement)
     {
         state->cursorPos = CLAMP_CURSOR(state->cursorPos + 1);
     }
-    if (movement == CursorMove_Left)
+    else if (movement == CursorMove_Left)
     {
         state->cursorPos = CLAMP_CURSOR(state->cursorPos - 1);
     }
-    if (movement == CursorMove_Down)
+    else if (movement == CursorMove_Down)
         MoveCursorDown(state);
-    if (movement == CursorMove_Up)
+    else if (movement == CursorMove_Up)
         MoveCursorUp(state);
+    else if (movement == CursorMove_JumpOneWordForward)
+        state->cursorPos = GetNextWordIndex(state->selectedItem, state->cursorPos);
+    else if (movement == CursorMove_JumpOneWordBackward)
+        state->cursorPos = GetPrevWordIndex(state->selectedItem, state->cursorPos)  ;
 }
 
 // returns 1 if model needs to be updated

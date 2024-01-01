@@ -244,19 +244,16 @@ inline void HandleInput(AppState *state, MyInput *input)
             }
             state->selectedItem = item;
             state->editMode = EditorMode_Insert;
-            UpdateCursorPosition(state, 0);
+            state->cursorPos = 0;
+            state->isCursorVisible = 1;
             OnAppResize(state);
             UpdatePageHeight(state);
             MarkFileUnsaved(state);
         } 
         else if (input->keysPressed['W'])
-        {
-            UpdateCursorPosition(state, GetNextWordIndex(state->selectedItem, state->cursorPos));
-        }
+           MoveCursor(state, CursorMove_JumpOneWordForward);
         else if (input->keysPressed['B'])
-        {
-            UpdateCursorPosition(state, GetPrevWordIndex(state->selectedItem, state->cursorPos));
-        }
+           MoveCursor(state, CursorMove_JumpOneWordBackward);
         else if (input->keysPressed[VK_RETURN] && input->isPressed[VK_CONTROL])
         {
             SetIsDone(state->selectedItem, !IsDone(state->selectedItem));
@@ -266,13 +263,9 @@ inline void HandleInput(AppState *state, MyInput *input)
     else if (state->editMode == EditorMode_Insert)
     {
         if (input->keysPressed['W'] && input->isPressed[VK_CONTROL])
-        {
-            UpdateCursorPosition(state, GetNextWordIndex(state->selectedItem, state->cursorPos));
-        }
+            MoveCursor(state, CursorMove_JumpOneWordForward);
         else if (input->keysPressed['B'] && input->isPressed[VK_CONTROL])
-        {
-            UpdateCursorPosition(state, GetPrevWordIndex(state->selectedItem, state->cursorPos));
-        }
+            MoveCursor(state, CursorMove_JumpOneWordBackward);
         else if (input->keysPressed[VK_ESCAPE] || input->keysPressed[VK_RETURN])
         {
             state->editMode = EditorMode_Normal;
