@@ -88,6 +88,11 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
             {
                 input.wheelDelta = GET_WHEEL_DELTA_WPARAM(msg.wParam);
             }
+            if(msg.message == WM_MOUSEMOVE)
+            {
+                input.mouseX = LOWORD(msg.lParam); 
+                input.mouseY = HIWORD(msg.lParam); 
+            }
             if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN)
             {
                 if (msg.wParam == VK_F11)
@@ -116,7 +121,7 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
 
         Stop(FrameTotal);
 
-        PrintFrameStats();
+        // PrintFrameStats();
         ResetMetrics();
         ReportMemoryChanges();
 

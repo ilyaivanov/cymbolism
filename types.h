@@ -85,6 +85,7 @@ typedef struct MyInput
     i32 charEventsThisFrameCount;
     i32 isPressed[256];
     i32 wheelDelta;
+    i32 mouseX, mouseY;
 } MyInput;
 
 typedef struct FontKerningPair
