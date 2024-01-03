@@ -7,8 +7,8 @@ int clickPerSecond = 30;
 int isRunning = 1;
 int isCtrlPressed = 0;
 
-#define SCRIPT ".\\run.bat"
-#define PROCESS_NAME "win.exe"
+#define SCRIPT ".\\run.bat gl"
+#define PROCESS_NAME "opengl.exe"
 
 void EnableDebugPriv()
 {
@@ -84,9 +84,7 @@ LRESULT CALLBACK HookProc(
             }
 
             if (p->vkCode == 162)
-            {
                 isCtrlPressed = 1;
-            }
         }
 
         if (wParam == WM_KEYUP && p->vkCode == 162)

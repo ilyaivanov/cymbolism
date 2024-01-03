@@ -29,6 +29,13 @@ IF "%arg1%" == "u" (
     GOTO end
 )
 
+IF "%arg1%" == "gl" (
+    cl %CompilerOptions% ..\playground\opengl.c %LinkerOptions% opengl32.lib
+    call .\opengl.exe
+    GOTO end
+)
+
+
 IF "%arg1%" == "p" (
     cl %CompilerOptions% ..\play.c %LinkerOptions%
     call .\play.exe
