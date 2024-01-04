@@ -8,7 +8,7 @@ int isRunning = 1;
 int isCtrlPressed = 0;
 
 #define SCRIPT ".\\run.bat gl"
-#define PROCESS_NAME "opengl.exe"
+#define PROCESS_NAME "geometryWars.exe"
 
 void EnableDebugPriv()
 {

@@ -4,8 +4,8 @@
 // takes dimensions of destinations, reads rect from source at (0,0)
 inline void CopyRectTo(MyBitmap *sourceT, MyBitmap *destination)
 {
-    u32 *row = (u32 *)destination->pixels;
-    u32 *source = (u32 *)sourceT->pixels;
+    u32 *row = (u32 *)destination->pixels + destination->width * (destination->height - 1);
+    u32 *source = (u32 *)sourceT->pixels + sourceT->width * (sourceT->height - 1);
     for (u32 y = 0; y < destination->height; y += 1)
     {
         u32 *pixel = row;
@@ -16,8 +16,8 @@ inline void CopyRectTo(MyBitmap *sourceT, MyBitmap *destination)
             sourcePixel += 1;
             pixel += 1;
         }
-        source += sourceT->width;
-        row += destination->width;
+        source -= sourceT->width;
+        row -= destination->width;
     }
 }
 
@@ -165,4 +165,10 @@ inline void DrawTextureTopLeft(MyBitmap *destination, MyBitmap *texture, float t
 inline void DrawTextureCentered(MyBitmap *destination, MyBitmap *texture, float textX, float textY, u32 color)
 {
     DrawTextureTopLeft(destination, texture, textX - texture->width / 2, textY - texture->height / 2, color);
+}
+
+
+float SaveRatioN(float numerator, float divisor, float n)
+{
+    return divisor != 0.0 ? (numerator / divisor) : n;
 }

@@ -48,7 +48,7 @@ void InitBitmapInfo(BITMAPINFO * bitmapInfo, u32 width, u32 height)
     bitmapInfo->bmiHeader.biSize = sizeof(bitmapInfo->bmiHeader);
     bitmapInfo->bmiHeader.biBitCount = 32;
     bitmapInfo->bmiHeader.biWidth = width;
-    bitmapInfo->bmiHeader.biHeight = -height; // makes rows go up, instead of going down by default
+    bitmapInfo->bmiHeader.biHeight = height; // makes rows go up, instead of going down by default
     bitmapInfo->bmiHeader.biPlanes = 1;
     bitmapInfo->bmiHeader.biCompression = BI_RGB;
 }
@@ -81,7 +81,7 @@ inline void DrawBitmap(HDC dc, BITMAPINFO *bitmapInfo, MyBitmap *bitmap){
 // WINDOW
 //
 
-HWND OpenGameWindow(HINSTANCE instance, WNDPROC OnEvent)
+HWND OpenGameWindowDim(HINSTANCE instance, WNDPROC OnEvent, int windowWidth, int windowHeight)
 {
     WNDCLASSW windowClass = {
         .hInstance = instance,
@@ -95,11 +95,9 @@ HWND OpenGameWindow(HINSTANCE instance, WNDPROC OnEvent)
     HDC dc = GetDC(0);
     int screenWidth = GetDeviceCaps(dc, HORZRES);
 
-    int windowWidth = 800;
-    int windowHeight = 1600;
     HWND window = CreateWindowW(windowClass.lpszClassName, (wchar_t*)"Cymbolism", EDITOR_DEFAULT_WINDOW_STYLE | WS_VISIBLE,
-                         /* x */ screenWidth - windowWidth - 200,
-                         /* y */ 10,
+                         /* x */ screenWidth - windowWidth - 20,
+                         /* y */ 20,
                          /* w */ windowWidth,
                          /* h */ windowHeight,
                          0, 0, instance, 0);
@@ -110,6 +108,12 @@ HWND OpenGameWindow(HINSTANCE instance, WNDPROC OnEvent)
 
     return window;
 }
+
+HWND OpenGameWindow(HINSTANCE instance, WNDPROC OnEvent)
+{
+    return OpenGameWindowDim(instance, OnEvent, 800, 1600);
+}
+
 
 // taken from https://devblogs.microsoft.com/oldnewthing/20100412-00/?p=14353
 WINDOWPLACEMENT prevWindowDimensions = {sizeof(prevWindowDimensions)};

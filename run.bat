@@ -30,8 +30,8 @@ IF "%arg1%" == "u" (
 )
 
 IF "%arg1%" == "gl" (
-    cl %CompilerOptions% ..\playground\opengl.c %LinkerOptions% opengl32.lib
-    call .\opengl.exe
+    cl %CompilerOptions% ..\playground\geometryWars.c %LinkerOptions% opengl32.lib
+    call .\geometryWars.exe
     GOTO end
 )
 
