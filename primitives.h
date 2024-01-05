@@ -21,9 +21,5 @@ typedef uint64_t u64;
 typedef float f32;
 typedef double f64;
 
-typedef struct V2i { i32 x, y; } V2i;
-typedef struct V3i { i32 x, y, z; } V3i;
-typedef struct V2f { f32 x, y; } V2f;
-typedef struct V3f { f32 x, y, z; } V3f;
 
 #endif

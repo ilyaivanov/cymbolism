@@ -75,7 +75,7 @@ LRESULT CALLBACK HookProc(
         KBDLLHOOKSTRUCT *p = (KBDLLHOOKSTRUCT *)lParam;
         if (wParam == WM_KEYDOWN)
         {
-            if (p->vkCode == 'D' && isCtrlPressed)
+            if (p->vkCode == 'Y' && isCtrlPressed)
             {
                 // I'm using a separate thread because for some reason closing the app via ALT+F4 takes some time
                 // probably messasge queue is broken or I'm not using it properly. This doesn't happen if I click Cross on the app itself

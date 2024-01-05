@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "..\primitives.h"
+#include "..\vec.c"
 #include "..\memory.c"
 #include "..\number.c"
 #include "..\win_utils.c"
@@ -83,10 +84,38 @@ V2f pos = {50.0f, 50.0f};
 V3f color = {1.0f, 1.0f, 1.0f};
 
 V2f shift = {0};
+V2f mouse = {0};
+V2f mouseSize = {20.0f, 20.0f};
+V3f mouseColor = {0.3f, 0.3f, 0.3f};
+
 f32 speed = 10;
 
 u8 keyboardState[256];
 u32 counter = 0;
+
+inline u8 IsKeyPressed(u8 key)
+{
+    return keyboardState[key] & 0b10000000;
+}
+
+void DrawRect(V2f *position, V2f *dim, V3f *color)
+{
+    glBegin(GL_TRIANGLE_STRIP);
+
+    glTexCoord2f(0, 1);
+    glColor3f(color->x, color->y, color->z);
+    glVertex2f(position->x, position->y + dim->y);
+
+    glTexCoord2f(0, 0);
+    glVertex2f(position->x, position->y);
+
+    glTexCoord2f(1, 1);
+    glVertex2f(position->x + dim->y, position->y + dim->y);
+
+    glTexCoord2f(1, 0);
+    glVertex2f(position->x + dim->y, position->y);
+    glEnd();
+}
 
 int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
 {
@@ -101,22 +130,29 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
         MSG msg;
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
         {
+            if(msg.message == WM_MOUSEMOVE)
+            {
+                mouse.x = LOWORD(msg.lParam); 
+                mouse.y = screen.y - HIWORD(msg.lParam); 
+
+                mouse = V2fSub(mouse, V2fMulScalar(mouseSize, 0.5f));
+            }
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
 
         GetKeyboardState(keyboardState);
 
-        if(keyboardState['W'] & 0b10000000)
+        if(IsKeyPressed('W'))
             shift.y = 1;
-        else if(keyboardState['S'] & 0b10000000)
+        else if(IsKeyPressed('S'))
             shift.y = -1;
         else 
             shift.y = 0;
 
-        if(keyboardState['A'] & 0b10000000)
+        if(IsKeyPressed('A'))
             shift.x = -1;
-        else if(keyboardState['D'] & 0b10000000)
+        else if(IsKeyPressed('D'))
             shift.x = 1;
         else 
             shift.x = 0;
@@ -149,21 +185,11 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
         };
         glLoadMatrixf(m);
 
-        glBegin(GL_TRIANGLE_STRIP);
 
-        glTexCoord2f(0, 1);
-        glColor3f(color.x, color.y, color.z);
-        glVertex2f(pos.x, pos.y + size.y);
+        DrawRect(&pos, &size, &color);
 
-        glTexCoord2f(0, 0);
-        glVertex2f(pos.x, pos.y);
 
-        glTexCoord2f(1, 1);
-        glVertex2f(pos.x + size.y, pos.y + size.y);
-
-        glTexCoord2f(1, 0);
-        glVertex2f(pos.x + size.y, pos.y);
-        glEnd();
+        DrawRect(&mouse, &mouseSize, &mouseColor);
 
         SwapBuffers(dc);
     }
