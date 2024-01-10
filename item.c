@@ -185,6 +185,7 @@ inline void ForEachActualChild(AppState *state, Item *parent, ForEachHandler *ha
     }
 }
 
+
 inline void ForEachActualChildLeveled(AppState *state, Item *parent, ForEachLeveledHandler *handler)
 {
     ItemInStack stack[512] = {0};

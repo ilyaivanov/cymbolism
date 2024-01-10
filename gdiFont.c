@@ -36,12 +36,11 @@ void DrawCharIntoBitmap(MyBitmap *fontCanvas, HDC *deviceContext, MyBitmap* text
 
 void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
 {
-    Start(FontInitialization);
 
     HDC deviceContext = CreateCompatibleDC(0);
  
  
-    int h = -MulDiv(fontSize, GetDeviceCaps(deviceContext, LOGPIXELSY), 96); // WTF is 96 or 72
+    int h = -MulDiv(fontSize, GetDeviceCaps(deviceContext, LOGPIXELSY), USER_DEFAULT_SCREEN_DPI);
     HFONT font = CreateFontA(h, 0, 0, 0,
                              FW_DONTCARE, // Weight
                              0,           // Italic
@@ -65,7 +64,6 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
     SelectObject(deviceContext, bitmap);
     SelectObject(deviceContext, font);
 
-    Start(FontKerningTablesInitialization);
     i32 kerningPairCount = GetKerningPairsW(deviceContext, 0, 0);
     i32 pairsSizeAllocated = sizeof(KERNINGPAIR) * kerningPairCount;
     KERNINGPAIR *pairs = AllocateMemory(pairsSizeAllocated);
@@ -83,15 +81,13 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
         fontData->pairsHash[index].val = pair->iKernAmount;
     }
     FreeMemory(pairs);
-    Stop(FontKerningTablesInitialization);
 
     SetBkColor(deviceContext, RGB(0, 0, 0));
     SetTextColor(deviceContext, RGB(255, 255, 255));
 
-    Start(FontTexturesInitialization);
 
     SIZE size;
-    for (wchar_t ch = 32; ch <= MAX_CHAR_CODE; ch += 1)
+    for (wchar_t ch = 32; ch < MAX_CHAR_CODE; ch += 1)
     {
         int len = 1;
         GetTextExtentPoint32W(deviceContext, &ch, len, &size);
@@ -111,18 +107,18 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
 
     // BEGIN ugly fucking design for checkmark (sparse unicode handling for 200k symbols will fix this)
     //
-    DrawCharIntoBitmap(&fontCanvas, &deviceContext, &fontData->checkmark, 10003); // code for ✓
-    DrawCharIntoBitmap(&fontCanvas, &deviceContext, &fontData->chevron, 0x203A); // code for ›
+    // DrawCharIntoBitmap(&fontCanvas, &deviceContext, &fontData->checkmark, 10003); // code for ✓
+    // DrawCharIntoBitmap(&fontCanvas, &deviceContext, &fontData->chevron, 0x203A); // code for ›
+    // DrawCharIntoBitmap(&fontCanvas, &deviceContext, &fontData->c1, '💉'); // code for 💉
+    // DrawCharIntoBitmap(&fontCanvas, &deviceContext, &fontData->c2, '🚑'); // code for 🚑
     //
     // END of ugly fucking design for checkmark
 
-    Stop(FontTexturesInitialization);
 
     GetTextMetrics(deviceContext, &fontData->textMetric);
     DeleteObject(bitmap);
     DeleteDC(deviceContext);
 
-    Stop(FontInitialization);
 }
 
 inline MyBitmap *GetGlyphBitmap(FontData *font, char codepoint)
@@ -185,15 +181,12 @@ inline void DrawTextLeftCenter(MyBitmap *bitmap, FontData *font, i32 x, i32 y, c
 
 inline int GetKerningValue(FontData *font, u16 left, u16 right)
 {
-    Start(FramePrintTextFindKerning);
     i32 index = HashAndProbeIndex(font, left, right);
 
     if(font->pairsHash[index].left != left && font->pairsHash[index].right != right)
     {
-        Stop(FramePrintTextFindKerning);
         return 0;
     }
 
-    Stop(FramePrintTextFindKerning);
     return font->pairsHash[index].val;
 }
