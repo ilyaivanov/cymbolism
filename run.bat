@@ -35,13 +35,6 @@ IF "%arg1%" == "gl" (
     GOTO end
 )
 
-IF "%arg1%" == "v2" (
-    cl %CompilerOptions% ..\v2\app.c %LinkerOptions% opengl32.lib
-    call .\app.exe
-    GOTO end
-)
-
-
 IF "%arg1%" == "p" (
     cl %CompilerOptions% ..\play.c %LinkerOptions%
     call .\play.exe
@@ -51,12 +44,12 @@ IF "%arg1%" == "p" (
 copy ..\res\resources.rc .\resources.rc >> NUL
 rc /nologo .\resources.rc 
 
-cl %CompilerOptions% ..\win.c .\resources.res %LinkerOptions%
+cl %CompilerOptions% ..\app.c .\resources.res %LinkerOptions%
 
 echo Compiled
 
 IF NOT "%arg1%" == "b" (
-    call .\win.exe
+    call .\app.exe
 )
 
 :end
