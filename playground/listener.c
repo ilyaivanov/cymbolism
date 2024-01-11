@@ -7,8 +7,8 @@ int clickPerSecond = 30;
 int isRunning = 1;
 int isCtrlPressed = 0;
 
-#define SCRIPT ".\\run.bat gl"
-#define PROCESS_NAME "geometryWars.exe"
+#define SCRIPT ".\\run.bat v2"
+#define PROCESS_NAME "win.exe"
 
 void EnableDebugPriv()
 {

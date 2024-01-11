@@ -83,10 +83,13 @@ typedef struct FontKerningPair
 typedef struct FontData 
 {
     MyBitmap textures[MAX_CHAR_CODE];
+    GLuint cachedTextures[MAX_CHAR_CODE];
 
     // stupid fucking design, but I need to create sparse system for 200k unicode chars
     MyBitmap checkmark;
     MyBitmap chevron;
+    MyBitmap c1;
+    MyBitmap c2;
 
     // Need to use ABC structure for this 
     // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getcharabcwidthsa
@@ -99,6 +102,7 @@ typedef struct FontData
 typedef struct Fonts
 {
     FontData regular;
+    FontData big;
 } Fonts;
 
 typedef enum EditorMode
@@ -132,5 +136,23 @@ typedef struct AppState
     i32 runningX;
     i32 runningY;
 } AppState;
+
+
+
+
+//Layout related stuff 
+typedef struct Layout
+{
+    float x, y, width, height;
+    float offsetY, pageHeight;
+} Layout;
+
+typedef struct App
+{
+    Layout header;
+    Layout body;
+    Layout footer;
+} App;
+
 
 #endif

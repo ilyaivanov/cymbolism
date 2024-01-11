@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      color: white;
+      font-family: "Segoe UI";
+      margin: 0;
+      
+      background-color: #111111;
+    }
+    .page
+    {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .header {
+      height: 50px;
+      background-color: #232323;
+    }
+
+    .body {
+      padding: 16px 20px;
+      background-color: #111111;
+      flex: 1;
+    }
+
+    .footer {
+      background-color: #232323;
+      height: 50px;
+    }
+
+    .title {
+      font-weight: bold;
+      font-size: 40px;
+    }
+
+    .ui {
+      font-size: 16px;
+    }
+
+    .regular {
+      font-size: 14px;
+    }
+
+    .small {
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="header"></div>
+    <div class="body">
+    </div>
+    <div class="footer"></div>
+
+  </div>
+  <script>
+    const body = document.getElementsByClassName("body")[0];
+    for (var i = 40; i >= 12; i--) {
+      const elem = document.createElement('div');
+      elem.style.fontSize = i + 'px';
+      elem.innerText = `Font ${i}px`;
+      body.appendChild(elem);
+    }
+
+    // document.addEventListener("DOMContentLoaded", function(){
+    //   for (el of document.getElementsByClassName('label'))
+    //   {
+    //     el.innerText += ` (${el.clientHeight}px  ${el.clientHeight * 1.5} DPI)`;
+    //   }
+    // })
+
+  </script>
+</body>
+
+</html>

@@ -8,6 +8,7 @@
 #include "..\memory.c"
 #include "..\number.c"
 #include "..\win_utils.c"
+#include "..\win_opengl.c"
 
 
 #define ONE_OVER_SQUARE_ROOT_OF_TWO 0.70710678118
@@ -15,38 +16,6 @@
 i32 isRunning = 1;
 i32 isPaused = 0;
 V2i screen = {0};
-
-void Win32InitOpenGL(HWND Window)
-{
-    HDC WindowDC = GetDC(Window);
-
-    PIXELFORMATDESCRIPTOR DesiredPixelFormat = {0};
-    DesiredPixelFormat.nSize = sizeof(DesiredPixelFormat);
-    DesiredPixelFormat.nVersion = 1;
-    DesiredPixelFormat.iPixelType = PFD_TYPE_RGBA;
-    DesiredPixelFormat.dwFlags = PFD_SUPPORT_OPENGL|PFD_DRAW_TO_WINDOW|PFD_DOUBLEBUFFER;
-    DesiredPixelFormat.cColorBits = 32;
-    DesiredPixelFormat.cAlphaBits = 8;
-    DesiredPixelFormat.iLayerType = PFD_MAIN_PLANE;
-
-    int SuggestedPixelFormatIndex = ChoosePixelFormat(WindowDC, &DesiredPixelFormat);
-    PIXELFORMATDESCRIPTOR SuggestedPixelFormat;
-    DescribePixelFormat(WindowDC, SuggestedPixelFormatIndex,
-                        sizeof(SuggestedPixelFormat), &SuggestedPixelFormat);
-    SetPixelFormat(WindowDC, SuggestedPixelFormatIndex, &SuggestedPixelFormat);
-    
-    HGLRC OpenGLRC = wglCreateContext(WindowDC);
-    if(wglMakeCurrent(WindowDC, OpenGLRC))        
-    {
-        // NOTE(casey): Success!!!
-    }
-    else
-    {
-        InvalidCodePath;
-        // TODO(casey): Diagnostic
-    }
-    ReleaseDC(Window, WindowDC);
-}
 
 LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 {

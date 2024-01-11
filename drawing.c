@@ -166,9 +166,3 @@ inline void DrawTextureCentered(MyBitmap *destination, MyBitmap *texture, float 
 {
     DrawTextureTopLeft(destination, texture, textX - texture->width / 2, textY - texture->height / 2, color);
 }
-
-
-float SaveRatioN(float numerator, float divisor, float n)
-{
-    return divisor != 0.0 ? (numerator / divisor) : n;
-}

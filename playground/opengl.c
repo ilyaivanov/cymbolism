@@ -4,6 +4,7 @@
 
 #ifdef USE_OPEN_GL
 #include <gl/gl.h>
+#include "..\win_opengl.c"
 #endif
 
 #include <stdio.h>
@@ -24,42 +25,7 @@ MyBitmap bitmap;
 AppState app;
 
 
-#define Assert(Expression) if(!(Expression)) {*(int *)0 = 0;}
-#define InvalidCodePath Assert(!"InvalidCodePath")
 
-#ifdef USE_OPEN_GL
-void Win32InitOpenGL(HWND Window)
-{
-    HDC WindowDC = GetDC(Window);
-
-    PIXELFORMATDESCRIPTOR DesiredPixelFormat = {0};
-    DesiredPixelFormat.nSize = sizeof(DesiredPixelFormat);
-    DesiredPixelFormat.nVersion = 1;
-    DesiredPixelFormat.iPixelType = PFD_TYPE_RGBA;
-    DesiredPixelFormat.dwFlags = PFD_SUPPORT_OPENGL|PFD_DRAW_TO_WINDOW|PFD_DOUBLEBUFFER;
-    DesiredPixelFormat.cColorBits = 32;
-    DesiredPixelFormat.cAlphaBits = 8;
-    DesiredPixelFormat.iLayerType = PFD_MAIN_PLANE;
-
-    int SuggestedPixelFormatIndex = ChoosePixelFormat(WindowDC, &DesiredPixelFormat);
-    PIXELFORMATDESCRIPTOR SuggestedPixelFormat;
-    DescribePixelFormat(WindowDC, SuggestedPixelFormatIndex,
-                        sizeof(SuggestedPixelFormat), &SuggestedPixelFormat);
-    SetPixelFormat(WindowDC, SuggestedPixelFormatIndex, &SuggestedPixelFormat);
-    
-    HGLRC OpenGLRC = wglCreateContext(WindowDC);
-    if(wglMakeCurrent(WindowDC, OpenGLRC))        
-    {
-        // NOTE(casey): Success!!!
-    }
-    else
-    {
-        InvalidCodePath;
-        // TODO(casey): Diagnostic
-    }
-    ReleaseDC(Window, WindowDC);
-}
-#endif
 
 LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -69,12 +35,11 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
     }
     else if (message == WM_SIZE)
     {
-        
-    RECT rect;
-    GetClientRect(window, &rect);
+        RECT rect;
+        GetClientRect(window, &rect);
         int windowWidth = rect.right - rect.left;
-    int windowHeight = rect.bottom - rect.top;
-            OnResize(&bitmapInfo, &bitmap, windowWidth, windowHeight);
+        int windowHeight = rect.bottom - rect.top;
+        OnResize(&bitmapInfo, &bitmap, windowWidth, windowHeight);
     }
     else if (message == WM_PAINT)
     {
@@ -88,7 +53,6 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 
 float time = 0;
 float width = 0.03;
-
 
 int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
 {
