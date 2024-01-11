@@ -154,4 +154,17 @@ FileContent ReadMyFileImp(char* path)
     return (FileContent){.content = buffer, .size = bytesRead};
 }
 
+
+void WriteMyFile(char *path, char* content, int size)
+{
+    HANDLE file = CreateFileA(path, GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS, 0, 0);
+
+    DWORD bytesWritten;
+    int res = WriteFile(file, content, size, &bytesWritten, 0);
+    CloseHandle(file);
+
+    Assert(bytesWritten == size);
+}
+
+
 #endif

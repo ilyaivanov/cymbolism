@@ -10,6 +10,7 @@ float SYSTEM_SCALE = 1;
 #include "input.c"
 #include "item.c"
 
+#define FILE_PATH "..\\data.txt"
 f32 appTime;
 #include "ui.c"
 
@@ -22,7 +23,6 @@ FileContent file;
 Item root;
 
 
-#define FILE_PATH "..\\data.txt"
 
 inline void Render()
 {

@@ -58,6 +58,18 @@ inline void BuildLayout(V2i screenSize)
     app.header.y = app.body.y + app.body.height;
 }
 
+void SaveState(Item *root)
+{
+    u32 contentSize = 40 * 1024; //assumes 40kb is enought, just for now 
+
+    char *buffer = VirtualAllocateMemory(contentSize);
+    u32 bytesWritten = SerializeState(root, buffer, contentSize);
+    WriteMyFile(FILE_PATH, buffer, bytesWritten);
+
+    VirtualFreeMemory(buffer);
+}
+
+
 void DrawItem(Item *item, i32 level)
 {
     glColor3f(88.0f / 255.0f, 88.0f / 255.0f, 88.0f / 255.0f);
@@ -193,6 +205,9 @@ void HandleInput(Item *root, UserInput *input)
             MoveCursor(&cursor, selectedItem, CursorMove_JumpOneWordForward);
         else if (input->keysPressedhisFrame['B'])
             MoveCursor(&cursor, selectedItem, CursorMove_JumpOneWordBackward);
+        else if (input->keysPressedhisFrame['S'] && input->keyboardState[VK_CONTROL])
+            SaveState(root);
+
     }
 }
 

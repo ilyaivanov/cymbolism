@@ -294,6 +294,26 @@ inline void ForEachVisibleChild(Item *parent, ForEachLeveledHandler *handler)
     }
 }
 
+inline void ForEachChildLeveled(Item *parent, ForEachLeveledHandler *handler)
+{
+    ItemInStack stack[512] = {0};
+    int currentItemInStack = -1;
+
+    for (int c = ChildCount(parent) - 1; c >= 0; c--)
+        stack[++currentItemInStack] = (ItemInStack){GetChildAt(parent, c), 0};
+
+    while (currentItemInStack >= 0)
+    {
+        ItemInStack current = stack[currentItemInStack--];
+        Item *item = current.ref;
+
+        handler(current.ref, current.level);
+
+        for (int c = ChildCount(item) - 1; c >= 0; c--)
+            stack[++currentItemInStack] = (ItemInStack){GetChildAt(item, c), current.level + 1};
+    }
+}
+
 
 //
 //
@@ -585,7 +605,62 @@ void ParseFileContent(Item *root, FileContent file)
 // Serialization
 //
 //
+char *contentToSave = 0;
+i32 currentContent = 0;
+i32 contentSize = 0;
 
+inline void AppendChar(char ch)
+{
+    *(contentToSave + currentContent) = ch;
+    currentContent++;
+}
+
+void AppendItem(Item *item, i32 level)
+{
+    for(int i = 0; i < level*2; i++)
+        AppendChar(' ');
+
+    // GetBit check is technically redundant, but conveys more meaning
+    // we check if any flags was set at runtime or item was saved with [ ] placeholder
+
+    u32 isDone = GetBit(item->flags, ItemStateFlag_IsDone);
+    u32 isOpen = GetBit(item->flags, ItemStateFlag_IsOpen);
+    u32 makedWithPlaceholder = GetBit(item->flags, ItemStateFlag_IsSerializedWithPlaceholder);
+
+    if(makedWithPlaceholder || (!isOpen && ChildCount(item) > 0) || isDone)
+    {
+        AppendChar('[');
+        i32 hasAtLeastOneFlag = 0;
+        if (isDone)
+            AppendChar('y');
+
+        if (!isOpen && ChildCount(item) > 0)
+            AppendChar('h');
+
+        if(!isDone && !(!isOpen && ChildCount(item) > 0))
+            AppendChar(' ');
+
+
+        AppendChar(']');
+        AppendChar(' ');
+    }
+
+    for(int i = 0; i < item->textBuffer.length; i++)
+        AppendChar(*(item->textBuffer.text + i));
+
+    AppendChar('\n');
+}
+
+u32 SerializeState(Item *root, char *buffer, u32 bufferLength)
+{
+    contentToSave = buffer;
+    contentSize = bufferLength;
+    currentContent = 0;
+
+    ForEachChildLeveled(root, AppendItem);
+
+    return currentContent - 1;
+}
 
 
 #endif
