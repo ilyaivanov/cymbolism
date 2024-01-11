@@ -34,9 +34,6 @@ typedef enum ItemStateFlag
     ItemStateFlag_IsSerializedWithPlaceholder,
 } ItemStateFlag;
 
-
-
-
 typedef struct Item
 {
     struct Item *parent;
@@ -110,6 +107,42 @@ void InitEmptyBufferWithCapacity(StringBuffer *buffer, i32 capacity)
     buffer->capacity = capacity;
     buffer->text = AllocateMemory(buffer->capacity);
     buffer->length = 0;
+}
+
+inline void MoveBytesRight(char *ptr, int length) 
+{
+    for (int i = length - 1; i > 0; i--) {
+        ptr[i] = ptr[i - 1];
+    }
+}
+
+inline void MoveBytesLeft(char *ptr, int length) 
+{
+    for (int i = 0; i < length - 1; i++) {
+        ptr[i] = ptr[i + 1];
+    }
+}
+
+void InsertCharAt(StringBuffer *buffer, i32 at, i32 ch)
+{
+    if(buffer->length >= buffer->capacity)
+    {
+        char *currentStr = buffer->text;
+        buffer->capacity *= 2;
+        buffer->text = AllocateMemory(buffer->capacity);
+        MoveMemory(buffer->text, currentStr, buffer->length);
+        FreeMemory(currentStr);
+    }
+
+    buffer->length += 1;
+    MoveBytesRight(buffer->text + at, buffer->length - at);
+    *(buffer->text + at) = ch;
+}
+
+void RemoveCharAt(StringBuffer *buffer, i32 at)
+{
+    MoveBytesLeft(buffer->text + at, buffer->length - at);
+    buffer->length--;
 }
 
 

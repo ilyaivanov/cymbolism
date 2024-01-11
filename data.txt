@@ -1,60 +1,9 @@
-One
-Two
-Three
-  sub three one
-  sub three two
-  sub three three
-four
-five
-six
-seven
-One
-Two
-Three
-  sub three one
-  sub three two
-  sub three three
-four
-five
-six
-seven
-One
-Two
-Three
-  sub three one
-  sub three two
-  sub three three
-four
-five
-six
-seven
-One
-Two
-Three
-  sub three one
-  sub three two
-  sub three three
-four
-five
-six
-seven
-One
-Two
-Three
-  sub three one
-  sub three two
-  sub three three
-four
-five
-six
-seven
-One
-Two
-Three
-  sub three one
-  sub three two
-  sub three three
-four
-five
-six
-seven
+The universe has given us only two units of time: the year and the day. Everything else is the creation of humankind to try to make life easier. As the protoplanetary disc congealed and separated into the planets as we know them, the Earth was made with a certain amount of angular momentum, sending it flying around the sun, spinning as it goes. The orbit we ended up in gave us the length of the year, and the rate of the Earth’s spin gave us the length of the day.
+
+Except they don’t match. There is no reason they should! It was just where the chunks of rock from that protoplanetary disc happened to fall, billions of years ago. The year-long orbit of the Earth around the sun now takes 365 days, 6 hours, 9 minutes and 10 seconds. For simplicity, we can call that 365 and a quarter days.
+
+This means that, if you celebrate New Year’s Eve after a year of 365 days, the Earth still has a quarter of a day of movement before you’ll be back to exactly where you were last New Year’s Eve. The Earth is tearing around the sun at a speed of around 30 kilometres every second, so this New Year’s Eve you will be over 650,000 kilometres away from wherever you were last year. So, if your New Year’s resolution was to not be late for things, you’re already way behind.
+
+This goes from being a minor inconvenience to becoming a major problem because the Earth’s orbital year controls the seasons. The northern hemisphere summer occurs around the same point in the Earth’s orbit every year because this is where the Earth’s tilt aligns with the position of the sun. After every 365-day year, the calendar year moves a quarter of a day away from the seasons. After four years, summer would start a day later. In less than four hundred years, within the lifespan of a civilization, the seasons would drift by three months. After eight hundred years, summer and winter would swap places completely.
+
+To fix this, we had to tweak the calendar to have the same number of days as the orbit. Somehow, we needed to break away from having the same number of days every year, but without having a fraction of a day; people get upset if you restart the day at a time other than midnight. We needed to link a year to the Earth’s orbit without breaking the tie between a day and the Earth’s rotation.

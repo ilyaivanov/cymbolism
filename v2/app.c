@@ -11,7 +11,6 @@ float SYSTEM_SCALE = 1;
 #include "item.c"
 
 f32 appTime;
-Item *selectedItem;
 #include "ui.c"
 
 int isRunning = 1;
@@ -65,6 +64,12 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 
         Render();
         SwapBuffers(dc);
+        
+    }    
+    else if (message == WM_CHAR)
+    {
+        if(wParam > 31)
+            userInput.charEventsThisFrame[userInput.charEventsThisFrameCount++] = wParam;
     }
 
     return DefWindowProc(window, message, wParam, lParam);
@@ -77,15 +82,14 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
     PreventWindowsDPIScaling();
     file = ReadMyFileImp("..\\data.txt");
     ParseFileContent(&root, file);
-    selectedItem = GetChildAt(&root, 0);
 
-    HWND window = OpenAppWindowWithSize(instance, OnEvent, 1500, 1500);
+    HWND window = OpenAppWindowWithSize(instance, OnEvent, 500, 1500);
     HDC dc = GetDC(window);
 
     Win32InitOpenGL(window);
     OnSizeChange(clientAreaSize.x, clientAreaSize.y);
 
-    Init();
+    Init(&root);
 
     // ToggleFullscreen(window, 1);
     
@@ -93,6 +97,8 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
     {
         userInput.zDeltaThisFrame = 0;
         memset(&userInput.keysPressedhisFrame, 0, sizeof(userInput.keysPressedhisFrame));
+        memset(&userInput.charEventsThisFrame, 0, sizeof(userInput.charEventsThisFrame));
+        userInput.charEventsThisFrameCount = 0;
 
 
         MSG msg;
@@ -103,18 +109,12 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
                 userInput.keyboardState[msg.wParam] = 1;
                 userInput.keysPressedhisFrame[msg.wParam] = 1;
 
-                u8 buff[256];
-                sprintf(buff, "Down %lld - %d\n", msg.wParam, VK_MENU);
-                OutputDebugStringA(buff);
                 // prevent OS handling keys like ALT + J
-                if (!(msg.wParam == VK_F4 && userInput.keyboardState[VK_MENU]))
+                if (!(msg.wParam == VK_F4 && userInput.keyboardState[VK_MENU]) && !cursor.isEditing)
                     continue;
             }
             if (msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP)
             {
-                u8 buff[256];
-                sprintf(buff, "Up %lld - %d\n", msg.wParam, VK_MENU);
-                OutputDebugStringA(buff);
                 userInput.keyboardState[msg.wParam] = 0;
             }
 

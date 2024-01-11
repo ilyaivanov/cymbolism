@@ -1,5 +1,6 @@
 #include "math.c"
 #include "item.c"
+#include "cursor.c"
 
 
 typedef enum SelectionBoxMovement
@@ -11,10 +12,10 @@ typedef enum SelectionBoxMovement
 } SelectionBoxMovement;
 
 
-void MoveSelectionBox(Item **selectedItem, SelectionBoxMovement movement)
+void MoveSelectionBox(Item **selectedItem, CursorState *cursor, SelectionBoxMovement movement)
 {
-    // isCursorVisible = 0;
-    // cursorPos = 0;
+    cursor->cursorPos = 0;
+    cursor->isVisible = 0;
 
     if (movement == SelectionBox_Right)
     {

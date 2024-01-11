@@ -299,15 +299,12 @@ void SplitTextIntoLines(u8 *text, i32 len,  u32 maxWidth, u32 *newLines, u32 *ne
 }
 
 // first line is centered at y, next lines go down
-u32 DrawParagraph(char* label, i32 len, float x, float y, float width)
+u32 DrawParagraph(char* label, i32 len, float x, float y, float width, u32 *newLines, u32 *newLinesCount)
 {
-    u32 newLines[32] = {0};
-    u32 newLinesCount = 0;
-
-    SplitTextIntoLines(label, len, width, newLines, &newLinesCount);
+    SplitTextIntoLines(label, len, width, newLines, newLinesCount);
 
 
-    float paragraphHeight = currentFont->textMetric.tmHeight * newLinesCount;
+    float paragraphHeight = currentFont->textMetric.tmHeight * *newLinesCount;
 
     y -= currentFont->textMetric.tmHeight / 2;
 
@@ -315,7 +312,7 @@ u32 DrawParagraph(char* label, i32 len, float x, float y, float width)
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-    for(int i = 0; i < newLinesCount; i++)
+    for(int i = 0; i < *newLinesCount; i++)
     {
         i32 start = (i == 0 ? 0 : newLines[i - 1] + 1);
         char *text = label + start;
@@ -329,6 +326,17 @@ u32 DrawParagraph(char* label, i32 len, float x, float y, float width)
     return paragraphHeight;
 }
 
+i32 GetTextWidth(u8 *text, u32 len){
+    i32 res = 0;
+    for(int i = 0; i < len; i++)
+    {
+        u8 ch = *(text + i);
+        // skips new lines and other control symbols
+        if(ch >= ' ')
+            res += currentFont->textures[ch].width + (GetKerningValue(ch, *(text + i + 1)));
+    }
+    return res;
+}
 
 inline int GetKerningValue(u16 left, u16 right)
 {
