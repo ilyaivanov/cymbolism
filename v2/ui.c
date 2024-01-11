@@ -138,14 +138,6 @@ void HandleInput(Item *root, UserInput *input)
             cursor.isEditing = 0;
         }
 
-        // if (input->keysPressedhisFrame['J'])
-        //     MoveCursor(&cursor, selectedItem, CursorMove_Down);
-        // else if (input->keysPressedhisFrame['K'])
-        //     MoveCursor(&cursor, selectedItem, CursorMove_Up);
-        // else if (input->keysPressedhisFrame['H'])
-        //     MoveCursor(&cursor, selectedItem, CursorMove_Left);
-        // else if (input->keysPressedhisFrame['L'])
-        //     MoveCursor(&cursor, selectedItem, CursorMove_Right);
 
         InsertChar(&cursor, input, selectedItem);
 
@@ -154,10 +146,32 @@ void HandleInput(Item *root, UserInput *input)
             RemoveCharAt(&selectedItem->textBuffer, cursor.cursorPos - 1);
             cursor.cursorPos--;
         }
+
+        // copy-pasted from the else block, extract a function
+        else if (input->keysPressedhisFrame['J'] && input->keyboardState[VK_CONTROL])
+            MoveCursor(&cursor, selectedItem, CursorMove_Down);
+        else if (input->keysPressedhisFrame['K'] && input->keyboardState[VK_CONTROL])
+            MoveCursor(&cursor, selectedItem, CursorMove_Up);
+        else if (input->keysPressedhisFrame['H'] && input->keyboardState[VK_CONTROL])
+            MoveCursor(&cursor, selectedItem, CursorMove_Left);
+        else if (input->keysPressedhisFrame['L'] && input->keyboardState[VK_CONTROL])
+            MoveCursor(&cursor, selectedItem, CursorMove_Right);
+        else if (input->keysPressedhisFrame['W'] && input->keyboardState[VK_CONTROL])
+            MoveCursor(&cursor, selectedItem, CursorMove_JumpOneWordForward);
+        else if (input->keysPressedhisFrame['B'] && input->keyboardState[VK_CONTROL])
+            MoveCursor(&cursor, selectedItem, CursorMove_JumpOneWordBackward);
     }
     else
     {
-        if (input->keysPressedhisFrame['J'] && input->keyboardState[VK_MENU])
+        if (input->keysPressedhisFrame['J'] && input->keyboardState[VK_CONTROL])
+            MoveCursor(&cursor, selectedItem, CursorMove_Down);
+        else if (input->keysPressedhisFrame['K'] && input->keyboardState[VK_CONTROL])
+            MoveCursor(&cursor, selectedItem, CursorMove_Up);
+        else if (input->keysPressedhisFrame['H'] && input->keyboardState[VK_CONTROL])
+            MoveCursor(&cursor, selectedItem, CursorMove_Left);
+        else if (input->keysPressedhisFrame['L'] && input->keyboardState[VK_CONTROL])
+            MoveCursor(&cursor, selectedItem, CursorMove_Right);
+        else if (input->keysPressedhisFrame['J'] && input->keyboardState[VK_MENU])
             MoveItemDown(selectedItem);
         else if (input->keysPressedhisFrame['K'] && input->keyboardState[VK_MENU])
             MoveItemUp(selectedItem);
