@@ -3,7 +3,7 @@ set arg1=%1
 
 set CompilerOptions=/nologo /MD /Zi
 
-set LinkerOptions=user32.lib gdi32.lib winmm.lib dwmapi.lib 
+set LinkerOptions=user32.lib gdi32.lib winmm.lib dwmapi.lib opengl32.lib
 
 
 IF "%arg1%" == "l" (
@@ -21,25 +21,6 @@ IF "%arg1%" == "l" (
 if exist build rmdir /s /q build
 mkdir build
 pushd build
-
-
-IF "%arg1%" == "u" (
-    cl %CompilerOptions% ..\playground\unit.c %LinkerOptions%
-    call .\unit.exe
-    GOTO end
-)
-
-IF "%arg1%" == "gl" (
-    cl %CompilerOptions% ..\playground\openglText.c %LinkerOptions% opengl32.lib
-    call .\openglText.exe
-    GOTO end
-)
-
-IF "%arg1%" == "p" (
-    cl %CompilerOptions% ..\play.c %LinkerOptions%
-    call .\play.exe
-    GOTO end
-)
 
 copy ..\res\resources.rc .\resources.rc >> NUL
 rc /nologo .\resources.rc 
