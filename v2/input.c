@@ -12,9 +12,4 @@ typedef struct UserInput
     float zDeltaThisFrame;
 } UserInput;
 
-inline u8 IsKeyDown(UserInput *input, u8 key)
-{
-    return input->keyboardState[key] & 0b10000000;
-}
-
 #endif

@@ -52,10 +52,7 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
         userInput.mouseX = (float)LOWORD(lParam);
         userInput.mouseY = (float)(clientAreaSize.y - HIWORD(lParam));
     }
-    else if (message == WM_KEYDOWN)
-    {
-        userInput.keysPressedhisFrame[wParam] = 1;
-    }
+
     else if (message == WM_MOUSEWHEEL)
     {
         userInput.zDeltaThisFrame += (float)GET_WHEEL_DELTA_WPARAM(wParam);
@@ -97,16 +94,33 @@ int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
         userInput.zDeltaThisFrame = 0;
         memset(&userInput.keysPressedhisFrame, 0, sizeof(userInput.keysPressedhisFrame));
 
+
         MSG msg;
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
         {
+            if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN)
+            {
+                userInput.keyboardState[msg.wParam] = 1;
+                userInput.keysPressedhisFrame[msg.wParam] = 1;
+
+                u8 buff[256];
+                sprintf(buff, "Down %lld - %d\n", msg.wParam, VK_MENU);
+                OutputDebugStringA(buff);
+                // prevent OS handling keys like ALT + J
+                if (!(msg.wParam == VK_F4 && userInput.keyboardState[VK_MENU]))
+                    continue;
+            }
+            if (msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP)
+            {
+                u8 buff[256];
+                sprintf(buff, "Up %lld - %d\n", msg.wParam, VK_MENU);
+                OutputDebugStringA(buff);
+                userInput.keyboardState[msg.wParam] = 0;
+            }
+
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-
-        GetKeyboardState(userInput.keyboardState);
-
-        
 
         Render();
 

@@ -6,6 +6,7 @@
 #include "font.c"
 #include "input.c"
 #include "item.c"
+#include "selection.c"
 
 V3f BG_COLOR = HexColor(0x111111);
 #define paddingV PX(20)
@@ -103,19 +104,53 @@ void HandleInput(Item *root, UserInput *input)
         app.body.offsetY = Clampf32(app.body.offsetY + input->zDeltaThisFrame, -(app.body.pageHeight - app.body.height), 0);
     }
 
-    if (input->keysPressedhisFrame['J'])
-        ChangeSelection(GetItemBelow(selectedItem));
-    if (input->keysPressedhisFrame['K'])
-        ChangeSelection(GetItemAbove(selectedItem));
-    if (input->keysPressedhisFrame['H'] && IsOpen(selectedItem))
-        SetIsOpen(selectedItem, 0);
-    else if (input->keysPressedhisFrame['H'])
-        ChangeSelection(selectedItem->parent);
-    if (input->keysPressedhisFrame['L'] && !IsOpen(selectedItem) && ChildCount(selectedItem) > 0)
-        SetIsOpen(selectedItem, 1);
-    else if (input->keysPressedhisFrame['L'] && ChildCount(selectedItem) > 0)
-        ChangeSelection(GetChildAt(selectedItem, 0));
+    u8 buff[256];
+    sprintf(buff, "Handle %d\n", input->keyboardState[VK_MENU]);
+    OutputDebugStringA(buff);
 
+    if (input->keysPressedhisFrame['J'] && input->keyboardState[VK_MENU])
+        MoveItemDown(selectedItem);
+    else if (input->keysPressedhisFrame['K'] && input->keyboardState[VK_MENU])
+        MoveItemUp(selectedItem);
+    else if (input->keysPressedhisFrame['H'] && input->keyboardState[VK_MENU])
+        MoveItemLeft(selectedItem);
+    else if (input->keysPressedhisFrame['L'] && input->keyboardState[VK_MENU])
+        MoveItemRight(selectedItem);
+
+
+    else if (input->keysPressedhisFrame['J'])
+        MoveSelectionBox(&selectedItem, SelectionBox_Down);
+    else if (input->keysPressedhisFrame['K'])
+        MoveSelectionBox(&selectedItem, SelectionBox_Up);
+    else if (input->keysPressedhisFrame['H'])
+        MoveSelectionBox(&selectedItem, SelectionBox_Left);
+    else if (input->keysPressedhisFrame['L'])
+        MoveSelectionBox(&selectedItem, SelectionBox_Right);
+    
+    else if (input->keysPressedhisFrame['D'])
+        selectedItem = RemoveItem(selectedItem);
+    else if (input->keysPressedhisFrame['O'])
+    {
+        Item *item = AllocateZeroedMemory(1, sizeof(Item));
+        InitEmptyBufferWithCapacity(&item->textBuffer, 10);
+        i32 currentIndex = GetItemIndex(selectedItem);
+
+        if (input->keyboardState[VK_CONTROL])
+        {
+            InitChildrenIfEmptyWithDefaultCapacity(selectedItem);
+            InsertChildAt(selectedItem, item, 0);
+            SetIsOpen(selectedItem, 1);
+        }
+        else
+        {
+            i32 targetIndex = input->keyboardState[VK_SHIFT] ? currentIndex + 1 : currentIndex;
+            InsertChildAt(selectedItem->parent, item, targetIndex);
+        }
+        selectedItem = item;
+        // state->editMode = keysPressedhisFrame;
+        // state->cursorPos = 0;
+        // state->isCursorVisible = 1;
+    }
 }
 
 void DrawUI(V2i screenSize, Item *root, UserInput *input)

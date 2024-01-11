@@ -105,6 +105,14 @@ void InitBuffer(StringBuffer *buffer, char* text, i32 sourceSize)
     buffer->length = targetIndex;
 }
 
+void InitEmptyBufferWithCapacity(StringBuffer *buffer, i32 capacity)
+{
+    buffer->capacity = capacity;
+    buffer->text = AllocateMemory(buffer->capacity);
+    buffer->length = 0;
+}
+
+
 //
 // Children
 //
@@ -115,6 +123,13 @@ inline void InitChildren(Item* parent, i32 capacity)
     parent->childrenBuffer.length = 0;
     parent->childrenBuffer.capacity = capacity;
     parent->childrenBuffer.children = AllocateZeroedMemory(capacity, sizeof(Item*));
+}
+
+
+inline void InitChildrenIfEmptyWithDefaultCapacity(Item *item)
+{
+    if (ChildCount(item) == 0)
+        InitChildren(item, 4);
 }
 
 
@@ -138,11 +153,47 @@ void AppendChild(Item *parent, Item* child)
     child->parent = parent;
 }
 
+void InsertChildAt(Item* parent, Item* child, i32 index)
+{
+    ExpandBufferIfFull(parent);
+
+    ItemChildrenBuffer *buffer = &parent->childrenBuffer;
+    Item **from = buffer->children + index;
+    Item **to = buffer->children + index + 1;
+    MoveMemory(to, from, (buffer->length - index) * sizeof(Item*));
+
+    buffer->children[index] = child;
+    child->parent = parent;
+    buffer->length++;
+}
+
+inline i32 RemoveChildFromParent(Item* child)
+{
+    i32 index = GetItemIndex(child);
+    if(index < ChildCount(child->parent) - 1)
+    {
+        Item **dest = child->parent->childrenBuffer.children + index;
+        Item **src = child->parent->childrenBuffer.children + index + 1;
+        size_t len = sizeof(Item*) * (child->parent->childrenBuffer.length - index);
+        MoveMemory(dest, src, len);
+    }    
+
+    child->parent->childrenBuffer.length--;
+    if(ChildCount(child->parent) == 0)
+        SetIsOpen(child->parent, 0);
+
+    child->parent = 0;
+    return index;
+}
+
 inline Item* GetChildAt(Item *parent, i32 index)
 {
     return *(parent->childrenBuffer.children + index);
 }
-
+inline void SetChildAt(Item *parent, i32 index, Item *child)
+{
+     *(parent->childrenBuffer.children + index) = child;
+}
 inline int ChildCount(Item *parent)
 {
      return parent->childrenBuffer.length;
@@ -255,6 +306,88 @@ Item* GetItemAbove(Item * item)
     return prevItem;
 
     return 0;
+}
+
+void FreeItem(Item *item)
+{
+    FreeMemory(item->textBuffer.text);
+    if(ChildCount(item) > 0)
+        FreeMemory(item->childrenBuffer.children);
+    FreeMemory(item);
+}
+
+Item* RemoveItem(Item *item)
+{
+    i32 index = GetItemIndex(item);
+    Item* parent = item->parent;
+    ForEachChild(item, FreeItem);
+    RemoveChildFromParent(item);
+    FreeItem(item);
+    
+    if(ChildCount(parent) == 0)
+        return parent;
+    if(index > 0)
+        return GetChildAt(parent, index - 1);
+    else 
+        return GetChildAt(parent, index);
+}
+
+
+//
+//
+// Movement
+//
+//
+
+void MoveItemDown(Item *item)
+{
+    Item *parent = item->parent;
+    i32 index = GetItemIndex(item);
+    if(index < ChildCount(parent) - 1)
+    {
+        Item *temp = GetChildAt(parent, index + 1);
+        SetChildAt(parent, index + 1, item);
+        SetChildAt(parent, index, temp);
+    }
+}
+
+void MoveItemUp(Item *item)
+{
+    Item *parent = item->parent;
+    i32 index = GetItemIndex(item);
+    if(index > 0)
+    {
+        Item *temp = GetChildAt(parent, index - 1);
+        SetChildAt(parent, index - 1, item);
+        SetChildAt(parent, index, temp);
+    }
+}
+
+void MoveItemRight(Item *item)
+{
+    i32 index = GetItemIndex(item);
+    if(index > 0)
+    {
+        Item *prevItem = GetChildAt(item->parent, index - 1);
+        
+        RemoveChildFromParent(item);
+        InitChildrenIfEmptyWithDefaultCapacity(prevItem);
+        AppendChild(prevItem, item);
+
+        SetIsOpen(prevItem, 1);
+    }
+}
+
+void MoveItemLeft(Item *item)
+{
+    Item *parent = item->parent;
+
+    if(IsRoot(parent))
+        return;
+    
+    i32 parentIndex = GetItemIndex(parent);
+    RemoveChildFromParent(item);
+    InsertChildAt(parent->parent, item, parentIndex + 1);
 }
 
 
