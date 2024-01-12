@@ -11,6 +11,7 @@ float SYSTEM_SCALE = 1;
 #include "item.c"
 
 #define FILE_PATH "..\\data.txt"
+#define TMP_FILE_PATH "..\\data_tmp.txt"
 f32 appTime;
 #include "ui.c"
 
@@ -80,7 +81,7 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 int wWinMain(HINSTANCE instance, HINSTANCE prev, PWSTR cmdLine, int showCode)
 {
     PreventWindowsDPIScaling();
-    file = ReadMyFileImp("..\\data.txt");
+    file = ReadMyFileImp(FILE_PATH);
     ParseFileContent(&root, file);
 
     HWND window = OpenAppWindowWithSize(instance, OnEvent, 500, 1500);
