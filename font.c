@@ -7,7 +7,7 @@
 #include "memory.c"
 
 // this dependency is questionable
-#include "layout.c"
+// #include "layout.c"
 
 #define MAX_CHAR_CODE 200
 
@@ -137,6 +137,7 @@ void InitFontSystem(FontData *fontData, int fontSize, char* fontName)
     FreeMemory(pairs);
 
     SetBkColor(deviceContext, RGB(0, 0, 0));
+    // SetBkColor(deviceContext, RGB(0, 0, 0));
     SetTextColor(deviceContext, RGB(255, 255, 255));
 
 
@@ -196,14 +197,14 @@ void CreateFontTexturesForOpenGl(FontData *font)
 
 void InitFonts()
 {
-    InitFontSystem(&titleFont, 40, "Segoe UI Bold");
-    CreateFontTexturesForOpenGl(&titleFont);
+    // InitFontSystem(&titleFont, 40, "Segoe UI Bold");
+    // CreateFontTexturesForOpenGl(&titleFont);
 
-    InitFontSystem(&regularFont, 14, "Segoe UI");
+    InitFontSystem(&regularFont, 14, "Consolas");
     CreateFontTexturesForOpenGl(&regularFont);
     
-    InitFontSystem(&smallFont, 12, "Segoe UI");
-    CreateFontTexturesForOpenGl(&smallFont);
+    // InitFontSystem(&smallFont, 14, "Co Mono");
+    // CreateFontTexturesForOpenGl(&smallFont);
 }
 
 inline void DrawRectGLBottomLeft(float x, float y, i32 w, i32 h)

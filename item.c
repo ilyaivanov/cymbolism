@@ -314,7 +314,6 @@ inline void ForEachChildLeveled(Item *parent, ForEachLeveledHandler *handler)
     }
 }
 
-
 //
 //
 // Traversing

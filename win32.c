@@ -74,9 +74,9 @@ HWND OpenAppWindowWithSize(HINSTANCE instance, WNDPROC OnEvent, int windowWidth,
     int screenWidth = GetDeviceCaps(dc, HORZRES);
     int screenHeight = GetDeviceCaps(dc, VERTRES);
 
-    HWND window = CreateWindowW(windowClass.lpszClassName, (wchar_t*)"App", EDITOR_DEFAULT_WINDOW_STYLE | WS_VISIBLE,
-                         /* x */ screenWidth / 2 - windowWidth / 2,
-                         /* y */ screenHeight / 2 - windowHeight / 2,
+    HWND window = CreateWindowW(windowClass.lpszClassName, (wchar_t*)"Editor", EDITOR_DEFAULT_WINDOW_STYLE | WS_VISIBLE,
+                         /* x */ screenWidth - windowWidth - 20,
+                         /* y */ 0 + 20,
                          /* w */ windowWidth,
                          /* h */ windowHeight,
                          0, 0, instance, 0);

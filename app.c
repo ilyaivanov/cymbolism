@@ -23,8 +23,6 @@ UserInput userInput;
 FileContent file;
 Item root;
 
-
-
 inline void Render()
 {
     DrawUI(clientAreaSize, &root, &userInput);

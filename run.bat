@@ -1,7 +1,7 @@
 @echo off
 set arg1=%1
 
-set CompilerOptions=/nologo /MD /Zi
+set CompilerOptions=/nologo /MD /Zi /FC
 
 set LinkerOptions=user32.lib gdi32.lib winmm.lib dwmapi.lib opengl32.lib
 
@@ -25,12 +25,12 @@ pushd build
 copy ..\res\resources.rc .\resources.rc >> NUL
 rc /nologo .\resources.rc 
 
-cl %CompilerOptions% ..\app.c .\resources.res %LinkerOptions%
+cl %CompilerOptions% ..\editor\main.c .\resources.res %LinkerOptions%
 
 echo Compiled
 
 IF NOT "%arg1%" == "b" (
-    call .\app.exe
+    call .\main.exe
 )
 
 :end
